@@ -1,5 +1,6 @@
 __pycache__/
 ui_*.py
+.idea/
 *.pyc
 *.wav
 *.cue
