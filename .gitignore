@@ -1,0 +1,11 @@
+__pycache__/
+ui_*.py
+*.pyc
+*.wav
+*.cue
+*.gcode
+*~
+*.swp
+*.bak
+*.o
+
