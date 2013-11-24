@@ -9,7 +9,10 @@ class TuningParameterFileHandler(object):
         out_dict = {'x_offset': tp.x_offset,
                     'y_offset': tp.y_offset,
                     'x_scale': tp.x_scale,
-                    'y_scale': tp.y_scale}
+                    'y_scale': tp.y_scale,
+                    'rotation': tp.rotation,
+                    'x_shear': tp.x_shear,
+                    'y_shear': tp.y_shear}
         printer = pprint.PrettyPrinter(indent=4)
         with open(out_filepath, 'w') as out_file:
             out_file.write(printer.pformat(out_dict))
@@ -25,4 +28,7 @@ class TuningParameterFileHandler(object):
         tp.y_offset = in_dict['y_offset']
         tp.x_scale = in_dict['x_scale']
         tp.y_scale = in_dict['y_scale']
+        tp.rotation = in_dict['rotation']
+        tp.x_shear = in_dict['x_shear']
+        tp.y_shear = in_dict['y_shear']
         return tp
