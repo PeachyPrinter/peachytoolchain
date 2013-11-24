@@ -26,6 +26,12 @@ class MainWindow(Ui_MainWindow):
         self.rotation_spin.valueChanged.connect(self.rotation_changed)
         self.x_shear_spin.valueChanged.connect(self.x_shear_changed)
         self.y_shear_spin.valueChanged.connect(self.y_shear_changed)
+        self.x_trapezoid_spin.valueChanged.connect(self.x_trapezoid_changed)
+        self.y_trapezoid_spin.valueChanged.connect(self.y_trapezoid_changed)
+        self.x_pin_radius_spin.valueChanged.connect(self.x_pin_radius_changed)
+        self.x_pin_phase_spin.valueChanged.connect(self.x_pin_phase_changed)
+        self.y_pin_radius_spin.valueChanged.connect(self.y_pin_radius_changed)
+        self.y_pin_phase_spin.valueChanged.connect(self.y_pin_phase_changed)
         self.pattern_combobox.currentIndexChanged.connect(self.pattern_changed)
         self.speed_spin.valueChanged.connect(self.speed_changed)
         self.save_button.clicked.connect(self.save_clicked)
@@ -51,6 +57,24 @@ class MainWindow(Ui_MainWindow):
 
     def y_shear_changed(self, value):
         self.tuning_parameters.y_shear = value
+
+    def x_trapezoid_changed(self, value):
+        self.tuning_parameters.x_trapezoid = value
+
+    def y_trapezoid_changed(self, value):
+        self.tuning_parameters.y_trapezoid = value
+
+    def x_pin_radius_changed(self, value):
+        self.tuning_parameters.x_pin_radius = value
+
+    def x_pin_phase_changed(self, value):
+        self.tuning_parameters.x_pin_phase = value
+
+    def y_pin_radius_changed(self, value):
+        self.tuning_parameters.y_pin_radius = value
+
+    def y_pin_phase_changed(self, value):
+        self.tuning_parameters.y_pin_phase = value
 
     def setup_models(self):
         self.generator_list_model = QtGui.QStringListModel()

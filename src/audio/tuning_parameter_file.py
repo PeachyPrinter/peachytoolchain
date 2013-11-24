@@ -12,7 +12,14 @@ class TuningParameterFileHandler(object):
                     'y_scale': tp.y_scale,
                     'rotation': tp.rotation,
                     'x_shear': tp.x_shear,
-                    'y_shear': tp.y_shear}
+                    'y_shear': tp.y_shear,
+                    'x_trapezoid': tp.x_trapezoid,
+                    'y_trapezoid': tp.y_trapezoid,
+                    'x_pin_radius': tp.x_pin_radius,
+                    'x_pin_phase': tp.x_pin_phase,
+                    'y_pin_radius': tp.y_pin_radius,
+                    'y_pin_phase': tp.y_pin_phase,
+        }
         printer = pprint.PrettyPrinter(indent=4)
         with open(out_filepath, 'w') as out_file:
             out_file.write(printer.pformat(out_dict))
@@ -31,4 +38,10 @@ class TuningParameterFileHandler(object):
         tp.rotation = in_dict['rotation']
         tp.x_shear = in_dict['x_shear']
         tp.y_shear = in_dict['y_shear']
+        tp.x_trapezoid = in_dict['x_trapezoid']
+        tp.y_trapezoid = in_dict['y_trapezoid']
+        tp.x_pin_radius = in_dict['x_pin_radius']
+        tp.x_pin_phase = in_dict['x_pin_phase']
+        tp.y_pin_radius = in_dict['y_pin_radius']
+        tp.y_pin_phase = in_dict['y_pin_phase']
         return tp

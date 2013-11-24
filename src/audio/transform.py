@@ -6,9 +6,12 @@ class AudioTransformer(object):
 
     def transform_values(self, old_values):
         new_values = []
-        for left, right in old_values:
-            left, right = ((left + right*self.tuning_parameters.x_shear),
-                           (right + left*self.tuning_parameters.y_shear))
+        for old_left, old_right in old_values:
+            left, right = old_left, old_right
+            left, right = ((left + old_right*self.tuning_parameters.x_shear),
+                           (right + old_left*self.tuning_parameters.y_shear))
+            left, right = ((left*(1+(old_right*self.tuning_parameters.x_trapezoid))),
+                           (right*(1+(old_left*self.tuning_parameters.y_trapezoid))))
             left, right = ((left  *  math.cos(self.tuning_parameters.rotation*math.pi/180.0) +
                             right *  math.sin(self.tuning_parameters.rotation*math.pi/180.0)),
                            (left  * -math.sin(self.tuning_parameters.rotation*math.pi/180.0) +
