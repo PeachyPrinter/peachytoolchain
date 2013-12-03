@@ -2,23 +2,30 @@ import threading
 import math
 
 class NullGenerator(object):
+    def __init__(self, sampling_rate, speed):
+        """
+        Generator that always returns (0.0, 0.0) coordinates.
+        """
+        self.sampling_rate = int(sampling_rate)
+        self.speed = float(speed)
+
     def nextN(self, n):
+        """Returns the next N points as a list of (x, y) tuples."""
         return [(0.0, 0.0)]*n
-    def set_wave_rate(self, rate):
-        pass
-    def set_speed(self, speed):
-        pass
 
 class SquareGenerator(object):
-    def __init__(self, wave_rate=8000, speed=1.0):
-        """Creates a square with bounds +/- size (in [-1.0, 1.0] range),drawing freq times
-        per second.
+    def __init__(self, sampling_rate, speed):
         """
-        print('created square gen')
-        self.cycle = 0
-        self.wave_rate = int(wave_rate)
-        self.freq = speed
+        Generator that creates a square with bounds +/- [-1.0, 1.0], drawing at a speed of 'speed' units per second.
+        Note that for a square within the range [-1.0, 1.0], the total circumference is 8 units, so it will take
+        8 seconds to complete the shape when drawing at 1 unit per second.
 
+        sampling_rate -- int -- The number of points per second to draw (should match the audio sampling rate)
+        speed -- float -- The speed at which to follow the object path in units per second.
+        """
+        self.cycle = 0
+        self._sampling_rate = int(sampling_rate)
+        self._speed = float(speed)
         self._lock = threading.Lock()
         self._update_cycles()
 
@@ -36,6 +43,7 @@ class SquareGenerator(object):
         return side_x, side_y
 
     def nextN(self, n):
+        """Returns the next N points as a list of (x, y) tuples."""
         with self._lock:
             values = []
             count = 0
@@ -47,47 +55,79 @@ class SquareGenerator(object):
                     self.cycle = 0
             return values
 
-    def set_wave_rate(self, wave_rate):
+    @property
+    def sampling_rate(self):
+        return self._sampling_rate
+
+    @sampling_rate.setter
+    def sampling_rate(self, rate):
         with self._lock:
-            self.wave_rate = wave_rate
+            self.sampling_rate = rate
             self._update_cycles()
 
-    def set_speed(self, speed):
+    @property
+    def speed(self, speed):
+        return self._speed
+
+    @speed.setter
+    def speed(self, speed):
         with self._lock:
-            self.freq = speed
+            self._speed = speed
             self._update_cycles()
 
     def _update_cycles(self):
-        self._cycles_per_side = int(float(self.wave_rate)/(4.0*self.freq))
+        self._cycles_per_side = int(2.0*float(self.sampling_rate)/self._speed)
         self._total_cycles = self._cycles_per_side * 4
         self.cycle = 0
 
 
 class StarGenerator(object):
-    def __init__(self, wave_rate=8000, speed=1.0):
+    def __init__(self, sampling_rate, speed):
+        """
+        Generator that creates a star-like pattern with bounds +/- [-1.0, 1.0] range, drawing at a speed of 'speed'
+        units per second.
+
+        This shape, which looks kind of like an hour glass rotated 45 degrees, can be used to determine:
+         * Scale (extents of the points should be +/- 1.0)
+         * Rotation (draws horizontal and vertical lines)
+         * Offset (vertical and horizontal lines should meet at (0.0, 0.0))
+         * Memory/hysteresis (without memory, top-left and bottom-right angles should meet exactly in the center,
+           memory will cause them to be separated)
+         * Linearity (sides should be 45 degree angles; ticks along the axes should all be equally spaced)
+         * Maximum speed (if moving too fast, sharp angles will be rounded; if ringing, long lines will be wavy)
+
+        sampling_rate -- int -- The number of points per second to draw (should match the audio sampling rate)
+        speed -- float -- The speed at which to follow the object path in units per second.
+        """
         self._vertices = [(0.0, 0.0), (0.3, 0.0), (0.4, 0.1), (0.5, 0.0), (0.6, -0.1), (0.7, 0.0), (1.0, 0.0),
                           (0.0, 1.0), (0.0, 0.7), (-0.1, 0.6), (0.0, 0.5), (0.1, 0.4), (0.0, 0.3),
                           (0.0, 0.0), (-0.3, 0.0), (-0.4, -0.1), (-0.5, 0.0), (-0.6, 0.1), (-0.7, 0.0), (-1.0, 0.0),
                           (0.0, -1.0), (0.0, -0.7), (0.1, -0.6), (0.0, -0.5), (-0.1, -0.4), (0.0, -0.3),
                         ]
-        self._total_length = self._calculate_path_length(self._vertices)
-
         self.cycle = 0
-        self.wave_rate = int(wave_rate)
-        self.freq = speed
-
+        self._sampling_rate = int(sampling_rate)
+        self._speed = speed
         self._lock = threading.Lock()
-
         self._update_cycles()
 
-    def set_wave_rate(self, wave_rate):
+    @property
+    def sampling_rate(self):
+        return self._sampling_rate
+
+    @sampling_rate.setter
+    def sampling_rate(self, rate):
         with self._lock:
-            self.wave_rate = wave_rate
+            self.sampling_rate = rate
             self._update_cycles()
 
-    def set_speed(self, speed):
+    @property
+    def speed(self, speed):
+        return self._speed
+
+    @speed.setter
+    def speed(self, speed):
         with self._lock:
-            self.freq = speed
+            self._speed = speed
             self._update_cycles()
 
     def _calculate_path_length(self, vertices):
@@ -102,16 +142,17 @@ class StarGenerator(object):
         return length
 
     def _update_cycles(self):
-        self._total_cycles = int(self.wave_rate/self.freq)
-        self._cycle_step = self._total_length/float(self._total_cycles)
+        self._cycle_step = self._speed/float(self._sampling_rate)
         self._current_segment_start = 0
         self._current_segment_dist_taken = 0.0
 
     def nextN(self, N):
-        values = []
-        for n in range(N):
-            values.append(self._next())
-        return values
+        """Returns the next N points as a list of (x, y) tuples."""
+        with self._lock:
+            values = []
+            for n in range(N):
+                values.append(self._next())
+            return values
 
     def _next(self):
         while True:
