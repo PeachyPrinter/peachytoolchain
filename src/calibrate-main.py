@@ -14,7 +14,7 @@ SAMPLING_RATE = 8000
 
 app = QtGui.QApplication(sys.argv)
 widget = QtGui.QMainWindow()
-generator = shape_generators.NullGenerator(SAMPLING_RATE, 1.0) # Just to make sure we don't leave it in an invalid state
+generator = shape_generators.NullGenerator(SAMPLING_RATE, 1.0, 1.0, (0.0, 0.0))
 height_adapter = Plane2dTo3dAdapter(generator, 0.0)
 tuning = TuningParameters()
 transformer = PositionToAudioTransformer(tuning)

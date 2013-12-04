@@ -46,7 +46,7 @@ class PositionToAudioTransformerProxy(QObject):
                 self._clip_hold_count = 0
                 if self._clip_state == False:
                     self._clip_state = True
-                    self.clippingStateChanged(True)
+                    self.clippingStateChanged.emit(True)
                 left = min(1.0, max(-1.0, left))
                 right = min(1.0, max(-1.0, right))
             elif self._clip_state == True:

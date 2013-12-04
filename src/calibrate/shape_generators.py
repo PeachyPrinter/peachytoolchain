@@ -2,19 +2,21 @@ import threading
 import math
 
 class NullGenerator(object):
-    def __init__(self, sampling_rate, speed):
+    def __init__(self, sampling_rate, speed, size, center):
         """
         Generator that always returns (0.0, 0.0) coordinates.
         """
         self.sampling_rate = int(sampling_rate)
         self.speed = float(speed)
+        self.size = float(size)
+        self.center = center
 
     def nextN(self, n):
         """Returns the next N points as a list of (x, y) tuples."""
         return [(0.0, 0.0)]*n
 
 class SquareGenerator(object):
-    def __init__(self, sampling_rate, speed):
+    def __init__(self, sampling_rate, speed, size, center):
         """
         Generator that creates a square with bounds +/- [-1.0, 1.0], drawing at a speed of 'speed' units per second.
         Note that for a square within the range [-1.0, 1.0], the total circumference is 8 units, so it will take
@@ -22,10 +24,14 @@ class SquareGenerator(object):
 
         sampling_rate -- int -- The number of points per second to draw (should match the audio sampling rate)
         speed -- float -- The speed at which to follow the object path in units per second.
+        size -- float -- The size in "units" to draw the square. It will be this many units on-side. (+/- 0.5 size)
+        center -- (x, y) -- The coordinates where the center of the shape should be drawn.
         """
         self.cycle = 0
         self._sampling_rate = int(sampling_rate)
         self._speed = float(speed)
+        self._size = float(size)
+        self.center = center
         self._lock = threading.Lock()
         self._update_cycles()
 
@@ -38,8 +44,8 @@ class SquareGenerator(object):
         side_fraction = -1.0 + 2.0*(float(side_cycle) / float(self._cycles_per_side)) # range [-1, 1)
         side_constant = self._side_constants[current_side]
         side_direction = self._side_directions[current_side]
-        side_x = float(side_constant[0]) + side_fraction*float(side_direction[0])
-        side_y = float(side_constant[1]) + side_fraction*float(side_direction[1])
+        side_x = (self._size/2.0)*(float(side_constant[0]) + side_fraction*float(side_direction[0])) + self.center[0]
+        side_y = (self._size/2.0)*(float(side_constant[1]) + side_fraction*float(side_direction[1])) + self.center[1]
         return side_x, side_y
 
     def nextN(self, n):
@@ -75,14 +81,25 @@ class SquareGenerator(object):
             self._speed = speed
             self._update_cycles()
 
+    @property
+    def size(self):
+        with self._lock:
+            return self._size
+
+    @size.setter
+    def size(self, size):
+        with self._lock:
+            self._size = size
+            self._update_cycles()
+
     def _update_cycles(self):
-        self._cycles_per_side = int(2.0*float(self.sampling_rate)/self._speed)
+        self._cycles_per_side = int(2.0*self._size*float(self.sampling_rate)/self._speed)
         self._total_cycles = self._cycles_per_side * 4
         self.cycle = 0
 
 
 class StarGenerator(object):
-    def __init__(self, sampling_rate, speed):
+    def __init__(self, sampling_rate, speed, size, center):
         """
         Generator that creates a star-like pattern with bounds +/- [-1.0, 1.0] range, drawing at a speed of 'speed'
         units per second.
@@ -98,6 +115,8 @@ class StarGenerator(object):
 
         sampling_rate -- int -- The number of points per second to draw (should match the audio sampling rate)
         speed -- float -- The speed at which to follow the object path in units per second.
+        size -- float -- The size in "units" to draw the star. It will be this large on-side (+/- 0.5 size)
+        center -- (x, y) -- The coordinates where the center of the shape should be drawn.
         """
         self._vertices = [(0.0, 0.0), (0.3, 0.0), (0.4, 0.1), (0.5, 0.0), (0.6, -0.1), (0.7, 0.0), (1.0, 0.0),
                           (0.0, 1.0), (0.0, 0.7), (-0.1, 0.6), (0.0, 0.5), (0.1, 0.4), (0.0, 0.3),
@@ -107,6 +126,8 @@ class StarGenerator(object):
         self.cycle = 0
         self._sampling_rate = int(sampling_rate)
         self._speed = speed
+        self._size = size
+        self.center = center
         self._lock = threading.Lock()
         self._update_cycles()
 
@@ -130,6 +151,17 @@ class StarGenerator(object):
             self._speed = speed
             self._update_cycles()
 
+    @property
+    def size(self):
+        with self._lock:
+            return self._size
+
+    @size.setter
+    def size(self, size):
+        with self._lock:
+            self._size = size
+            self._update_cycles()
+
     def _calculate_path_length(self, vertices):
         length = 0.0
         last_vert = vertices[0]
@@ -143,6 +175,7 @@ class StarGenerator(object):
 
     def _update_cycles(self):
         self._cycle_step = self._speed/float(self._sampling_rate)
+        self.cycle = 0
         self._current_segment_start = 0
         self._current_segment_dist_taken = 0.0
 
@@ -157,8 +190,8 @@ class StarGenerator(object):
     def _next(self):
         while True:
             # Keep iterating through segments until we reach the next point (should normally only loop once, if at all)
-            current_vert = self._vertices[self._current_segment_start]
-            next_vert = self._vertices[(self._current_segment_start + 1) % len(self._vertices)]
+            current_vert = self._get_vertices(self._current_segment_start)
+            next_vert = self._get_vertices((self._current_segment_start + 1) % len(self._vertices))
             current_segment_length = self._calculate_path_length([current_vert, next_vert])
             self._current_segment_dist_taken = self._current_segment_dist_taken + self._cycle_step
             if self._current_segment_dist_taken < current_segment_length:
@@ -170,3 +203,9 @@ class StarGenerator(object):
         x = current_vert[0] + (self._current_segment_dist_taken/current_segment_length)*(next_vert[0] - current_vert[0])
         y = current_vert[1] + (self._current_segment_dist_taken/current_segment_length)*(next_vert[1] - current_vert[1])
         return (x, y)
+
+    def _get_vertices(self, index):
+        """Returns the vertices at the given index, scaled by the current size."""
+        norm_vert = self._vertices[index]
+        scaled_vert = ((self._size/2.0)*norm_vert[0]+self.center[0], (self._size/2.0)*norm_vert[1]+self.center[1])
+        return scaled_vert

@@ -21,6 +21,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.setup_initial_values()
 
     def setup_signals(self):
+        self.build_x_min_edit.textChanged.connect(self.build_x_min_changed)
+        self.build_x_max_edit.textChanged.connect(self.build_x_max_changed)
+        self.build_y_min_edit.textChanged.connect(self.build_y_min_changed)
+        self.build_y_max_edit.textChanged.connect(self.build_y_max_changed)
         self.x_offset_spin.valueChanged.connect(self.x_offset_changed)
         self.y_offset_spin.valueChanged.connect(self.y_offset_changed)
         self.x_scale_spin.valueChanged.connect(self.x_scale_changed)
@@ -30,14 +34,41 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.y_shear_spin.valueChanged.connect(self.y_shear_changed)
         self.x_trapezoid_spin.valueChanged.connect(self.x_trapezoid_changed)
         self.y_trapezoid_spin.valueChanged.connect(self.y_trapezoid_changed)
-        self.x_pin_radius_spin.valueChanged.connect(self.x_pin_radius_changed)
-        self.x_pin_phase_spin.valueChanged.connect(self.x_pin_phase_changed)
-        self.y_pin_radius_spin.valueChanged.connect(self.y_pin_radius_changed)
-        self.y_pin_phase_spin.valueChanged.connect(self.y_pin_phase_changed)
         self.pattern_combobox.currentIndexChanged.connect(self.pattern_changed)
-        self.speed_spin.valueChanged.connect(self.speed_changed)
+        self.speed_edit.textChanged.connect(self.speed_changed)
+        self.size_edit.textChanged.connect(self.size_changed)
+        self.shape_center_x_edit.textChanged.connect(self.shape_center_x_changed)
+        self.shape_center_y_edit.textChanged.connect(self.shape_center_y_changed)
         self.save_button.clicked.connect(self.save_clicked)
         self.load_button.clicked.connect(self.load_clicked)
+
+    def build_x_min_changed(self, value):
+        try:
+            x_min = float(value)
+        except ValueError:
+            x_min = 0.0
+        self.tuning_parameters.build_x_min = x_min
+
+    def build_x_max_changed(self, value):
+        try:
+            x_max = float(value)
+        except ValueError:
+            x_max = 1.0
+        self.tuning_parameters.build_x_max = x_max
+
+    def build_y_min_changed(self, value):
+        try:
+            y_min = float(value)
+        except ValueError:
+            y_min = 0.0
+        self.tuning_parameters.build_y_min = y_min
+
+    def build_y_max_changed(self, value):
+        try:
+            y_max = float(value)
+        except ValueError:
+            y_max = 1.0
+        self.tuning_parameters.build_y_max = y_max
 
     def x_offset_changed(self, value):
         self.tuning_parameters.x_offset = value
@@ -66,18 +97,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def y_trapezoid_changed(self, value):
         self.tuning_parameters.y_trapezoid = value
 
-    def x_pin_radius_changed(self, value):
-        self.tuning_parameters.x_pin_radius = value
-
-    def x_pin_phase_changed(self, value):
-        self.tuning_parameters.x_pin_phase = value
-
-    def y_pin_radius_changed(self, value):
-        self.tuning_parameters.y_pin_radius = value
-
-    def y_pin_phase_changed(self, value):
-        self.tuning_parameters.y_pin_phase = value
-
     def setup_models(self):
         self.generator_list_model = QtGui.QStringListModel()
         self.generator_list_model.setStringList(sorted(self.generators.keys()))
@@ -85,17 +104,57 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def setup_initial_values(self):
         self.pattern_combobox.setModel(self.generator_list_model)
         self.pattern_combobox.setCurrentIndex(0)
+        self._update_tuning_parameters()
 
     def pattern_changed(self, index):
         pattern_name = self.generator_list_model.data(
             self.generator_list_model.index(index),
             QtCore.Qt.DisplayRole
         )
-        self.generator = self.generators[pattern_name](self.sampling_rate, self.speed_spin.value())
+        self.generator = self.generators[pattern_name](
+                self.sampling_rate,
+                self.get_speed(),
+                self.get_size(),
+                self.get_shape_center()
+        )
         self.height_adapter.generator = self.generator
 
-    def speed_changed(self, speed):
-        self.generator.speed = speed
+    def speed_changed(self, value):
+        self.generator.speed = self.get_speed()
+
+    def get_speed(self):
+        try:
+            speed = float(self.speed_edit.text())
+        except ValueError:
+            speed = 1.0
+        return speed
+
+    def size_changed(self, value):
+        self.generator.size = self.get_size()
+
+    def get_size(self):
+        try:
+            size = float(self.size_edit.text())
+        except ValueError:
+            size = 1.0
+        return size
+
+    def shape_center_x_changed(self, value):
+        self.generator.center = self.get_shape_center()
+
+    def shape_center_y_changed(self, value):
+        self.generator.center = self.get_shape_center()
+
+    def get_shape_center(self):
+        try:
+            x = float(self.shape_center_x_edit.text())
+        except ValueError:
+            x = 0.0
+        try:
+            y = float(self.shape_center_y_edit.text())
+        except ValueError:
+            y = 0.0
+        return (x, y)
 
     def save_clicked(self):
         (filename, selected_filter) = QtGui.QFileDialog.getSaveFileName(
@@ -126,6 +185,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def _update_tuning_parameters(self):
         tp = self.tuning_parameters
+        self.build_x_min_edit.setText(str(tp.build_x_min))
+        self.build_x_max_edit.setText(str(tp.build_x_max))
+        self.build_y_min_edit.setText(str(tp.build_y_min))
+        self.build_y_max_edit.setText(str(tp.build_y_max))
         self.x_offset_spin.setValue(tp.x_offset)
         self.y_offset_spin.setValue(tp.y_offset)
         self.rotation_spin.setValue(tp.rotation)
@@ -133,4 +196,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.y_shear_spin.setValue(tp.y_shear)
         self.x_scale_spin.setValue(tp.x_scale)
         self.y_scale_spin.setValue(tp.y_scale)
+        self.x_trapezoid_spin.setValue(tp.x_trapezoid)
+        self.y_trapezoid_spin.setValue(tp.y_trapezoid)
 
