@@ -5,8 +5,9 @@ import os.path
 from .ui_mainwindow import Ui_MainWindow
 from audio.tuning_parameter_file import TuningParameterFileHandler
 
-class MainWindow(Ui_MainWindow):
+class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self, tuning_parameters, audio_server, transformer_proxy, generators, height_adapter, sampling_rate):
+        QtGui.QMainWindow.__init__(self)
         self.tuning_parameters = tuning_parameters
         self.audio_server = audio_server
         self.transformer_proxy = transformer_proxy
@@ -14,9 +15,7 @@ class MainWindow(Ui_MainWindow):
         self.generator = None
         self.height_adapter = height_adapter
         self.sampling_rate = sampling_rate
-
-    def setupUi(self, MainWindow):
-        Ui_MainWindow.setupUi(self, MainWindow)
+        self.setupUi(self)
         self.setup_signals()
         self.setup_models()
         self.setup_initial_values()

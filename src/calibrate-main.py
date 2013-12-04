@@ -20,12 +20,12 @@ tuning = TuningParameters()
 transformer = PositionToAudioTransformer(tuning)
 transformer_proxy = PositionToAudioTransformerProxy(transformer, height_adapter)
 audio = AudioServer(transformer_proxy, SAMPLING_RATE)
+audio.start()
+
 generators = {'Square': shape_generators.SquareGenerator,
               'Star': shape_generators.StarGenerator}
-ui = MainWindow(tuning, audio, transformer_proxy, generators, height_adapter, SAMPLING_RATE)
-ui.setupUi(widget)
-widget.show()
-audio.start()
+mainwindow = MainWindow(tuning, audio, transformer_proxy, generators, height_adapter, SAMPLING_RATE)
+mainwindow.show()
 retcode = app.exec_()
 audio.stop()
 sys.exit(retcode)
