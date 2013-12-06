@@ -12,6 +12,17 @@ def convert_values_to_frames(values):
     return a string of bytes representing PCM frames for those values."""
     array = bytearray()
     for left, right in values:
-        array.extend(STEREO_WAVE_STRUCT.pack(int(left*MAX_S16), int(right*MAX_S16)))
+        try:
+            array.extend(STEREO_WAVE_STRUCT.pack(int(left*MAX_S16), int(right*MAX_S16)))
+        except struct.error:
+            print('Failed to pack values (%f, %f)' % (left, right))
+            raise
     return bytes(array)
 
+def clip_values(values):
+    new_values = []
+    for (left, right) in values:
+        left = min(1.0, max(-1.0, left))
+        right = min(1.0, max(-1.0, right))
+        new_values.append((left, right))
+    return new_values

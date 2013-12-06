@@ -51,9 +51,9 @@ import sys
 import wave
 from collections import deque
 import cue_file
-from audio.transform import AudioTransformer
+from audio.transform import PositionToAudioTransformer
 from audio.tuning_parameter_file import TuningParameterFileHandler
-from audio.util import convert_values_to_frames
+from audio.util import convert_values_to_frames, clip_values
 
 MIN_STEP = 0.001*100.0 # Minimum possible step in millimetres. Used as a stopping condition.
 DEBUG = False # Set to True for debugging messages
@@ -93,8 +93,8 @@ class GcodeConverter:
     def __init__(self, printer_parameters):
         self.parameters = printer_parameters
         self.warned_once_codes = set()  # The set of codes that we have already warned the user are not supported.
-        self.tuning_parameters = TuningParameterFileHandler.read_from_file('tuning.dat')
-        self.transformer = AudioTransformer(self.tuning_parameters)
+        self.tuning_collection = TuningParameterFileHandler.read_from_file('tuning.dat')
+        self.transformer = PositionToAudioTransformer(self.tuning_collection)
 
     def convertGcode(self, gcode_filename, wave_filename, cue_filename):
         wave_file = self.createWaveFile(wave_filename)
@@ -337,13 +337,8 @@ class GcodeConverter:
     def addAudioFrame(self, x, y, z, state, wave_file, record=True):
         if record:
             state.replay_buffer.append((x, y, z))
-        # Determine normalized space for points
-        left = -1.0 + 2.0*(x-self.parameters.XAxisMinPos)/(self.parameters.XAxisMaxPos-self.parameters.XAxisMinPos)
-        right = -1.0 + 2.0*(y-self.parameters.YAxisMinPos)/(self.parameters.YAxisMaxPos-self.parameters.YAxisMinPos)
-        values = [(left, right)]
-        # Transform according to tuning parameters
-        values = self.transformer.transform_values(values)
-        # Write to audio frames
+        values = self.transformer.transform_points([(x, y, z),])
+        values = clip_values(values)
         frames = convert_values_to_frames(values)
         wave_file.writeframesraw(frames)
         state.frame_num += 1
