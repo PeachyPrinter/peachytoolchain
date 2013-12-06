@@ -1,5 +1,5 @@
 import threading
-from PySide.QtCore import QObject, Signal, Slot
+from PySide.QtCore import QObject, Signal
 
 class PositionToAudioTransformerProxy(QObject):
     """

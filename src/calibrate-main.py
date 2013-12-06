@@ -5,10 +5,12 @@ import sys
 from audio.audio_server import AudioServer
 from audio.transform import PositionToAudioTransformer
 from audio.tuning_parameters import TuningParameters, TuningParameterCollection
+from audio.modulation import AmplitudeModulator
 from calibrate import shape_generators
 from calibrate.mainwindow import MainWindow
 from calibrate.plane_2d_to_3d_adapter import Plane2dTo3dAdapter
 from calibrate.transformer_proxy import PositionToAudioTransformerProxy
+from calibrate.modulator_proxy import ModulatorProxy
 
 SAMPLING_RATE = 8000
 
@@ -19,7 +21,9 @@ height_adapter = Plane2dTo3dAdapter(generator, 0.0)
 tuning = TuningParameterCollection()
 transformer = PositionToAudioTransformer(tuning)
 transformer_proxy = PositionToAudioTransformerProxy(transformer, height_adapter)
-audio = AudioServer(transformer_proxy, SAMPLING_RATE)
+modulator = AmplitudeModulator(SAMPLING_RATE, SAMPLING_RATE/2)
+modulator_proxy = ModulatorProxy(modulator, transformer_proxy)
+audio = AudioServer(modulator_proxy, SAMPLING_RATE)
 audio.start()
 
 generators = {'Square': shape_generators.SquareGenerator,
