@@ -15,16 +15,18 @@ class AmplitudeModulator(object):
     def _update_modulation(self):
         # Use a fixed set of values for modulation to speed up modulation and ensure consistency.
         cycle_period = int(round(self.sampling_rate / self.carrier_freq))
-        self._modulation_waveform = [math.sin(2.0*math.pi*(float(cycle) / float(cycle_period))) for cycle in range(cycle_period)]
+        self._modulation_waveform = [math.cos(2.0*math.pi*(float(cycle) / float(cycle_period))) for cycle in range(cycle_period)]
         self._current_cycle = 0
 
     def modulate_values(self, values):
         new_values = []
         for (left, right) in values:
+            old_l, old_r = left, right
             left *= self._modulation_waveform[self._current_cycle]
             right *= self._modulation_waveform[self._current_cycle]
             new_values.append((left, right))
             self._current_cycle = (self._current_cycle + 1) % len(self._modulation_waveform)
+            #print('(%f, %f) -> (%f, %f)' % (old_l, old_r, left, right))
         return new_values
 
     @property

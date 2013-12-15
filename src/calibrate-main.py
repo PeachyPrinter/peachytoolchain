@@ -12,7 +12,7 @@ from calibrate.plane_2d_to_3d_adapter import Plane2dTo3dAdapter
 from calibrate.transformer_proxy import PositionToAudioTransformerProxy
 from calibrate.modulator_proxy import ModulatorProxy
 
-SAMPLING_RATE = 8000
+SAMPLING_RATE = 22050
 
 app = QtGui.QApplication(sys.argv)
 widget = QtGui.QMainWindow()
@@ -21,7 +21,7 @@ height_adapter = Plane2dTo3dAdapter(generator, 0.0)
 tuning = TuningParameterCollection()
 transformer = PositionToAudioTransformer(tuning)
 transformer_proxy = PositionToAudioTransformerProxy(transformer, height_adapter)
-modulator = AmplitudeModulator(SAMPLING_RATE, SAMPLING_RATE/2)
+modulator = AmplitudeModulator(SAMPLING_RATE, SAMPLING_RATE/4)
 modulator_proxy = ModulatorProxy(modulator, transformer_proxy)
 audio = AudioServer(modulator_proxy, SAMPLING_RATE)
 audio.start()
