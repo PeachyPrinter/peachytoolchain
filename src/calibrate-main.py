@@ -12,7 +12,7 @@ from calibrate.plane_2d_to_3d_adapter import Plane2dTo3dAdapter
 from calibrate.transformer_proxy import PositionToAudioTransformerProxy
 from calibrate.modulator_proxy import ModulatorProxy
 
-SAMPLING_RATE = 22050
+SAMPLING_RATE = 44100
 
 app = QtGui.QApplication(sys.argv)
 widget = QtGui.QMainWindow()
