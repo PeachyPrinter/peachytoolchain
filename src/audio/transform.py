@@ -36,6 +36,7 @@ class PositionToAudioTransformer(object):
                 last_tp = tp
             else:
                 tp = last_tp
+            last_z = z
             left += tp.x_offset
             right += tp.y_offset
             left *= tp.x_scale

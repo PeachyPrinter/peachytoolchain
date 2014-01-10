@@ -4,6 +4,8 @@ UIC_OPT = -x
 RCC = pyside-rcc
 RCC_OPT =
 
+.PHONY: clean
+
 UI_FILES = $(shell find . -name *.ui)
 #RESOURCE_FILES = $(shell find ../resources -name *.qrc)
 
@@ -16,3 +18,5 @@ UI_FILES = $(shell find . -name *.ui)
 
 ui: $(UI_FILES:.ui=.py)
 
+clean:
+	rm -f $(UI_FILES:.ui=.py)

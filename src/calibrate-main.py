@@ -5,7 +5,7 @@ import sys
 from audio.audio_server import AudioServer
 from audio.transform import PositionToAudioTransformer
 from audio.tuning_parameters import TuningParameters, TuningParameterCollection
-from audio.modulation import AmplitudeModulator
+from audio.modulation import ModulationTypes, getModulator
 from calibrate import shape_generators
 from calibrate.mainwindow import MainWindow
 from calibrate.plane_2d_to_3d_adapter import Plane2dTo3dAdapter
@@ -21,7 +21,8 @@ height_adapter = Plane2dTo3dAdapter(generator, 0.0)
 tuning = TuningParameterCollection()
 transformer = PositionToAudioTransformer(tuning)
 transformer_proxy = PositionToAudioTransformerProxy(transformer, height_adapter)
-modulator = AmplitudeModulator(SAMPLING_RATE, SAMPLING_RATE/4)
+modulator = getModulator(ModulationTypes.AM, SAMPLING_RATE)
+modulator.laser_enabled = True
 modulator_proxy = ModulatorProxy(modulator, transformer_proxy)
 audio = AudioServer(modulator_proxy, SAMPLING_RATE)
 audio.start()

@@ -94,6 +94,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.calibrate_test_mode = self.CALIBRATE_MODE
         self.setupUi(self)
 
+        # FIXME: Have to manually add button group because pyside-uic fails to compile them
+        self.modulation_buttonGroup = QtGui.QButtonGroup(self)
+        self.modulation_buttonGroup.setExclusive(True)
+        self.modulation_buttonGroup.addButton(self.modulation_radioButton_AM, 1)
+        self.modulation_buttonGroup.addButton(self.modulation_radioButton_DC, 2)
+
         self.generator_list_model = QtGui.QStringListModel()
         self.generator_list_model.setStringList(sorted(self.generators.keys()))
         self.calibrations_list_model = TuningParameterListModel(self.tuning_collection)
