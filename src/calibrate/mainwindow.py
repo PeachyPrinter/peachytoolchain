@@ -3,7 +3,7 @@ import os.path
 
 from .ui_mainwindow import Ui_MainWindow
 from audio.tuning_parameter_file import TuningParameterFileHandler
-from audio.tuning_parameters import TuningParameters
+from audio.modulation import ModulationTypes, getModulator
 
 
 class TuningParameterListModel(QtCore.QAbstractListModel):
@@ -80,11 +80,18 @@ class TuningParameterListModel(QtCore.QAbstractListModel):
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     CALIBRATE_MODE = 0
     TEST_MODE = 1
-    def __init__(self, tuning_parameter_collection, audio_server, transformer_proxy, generators, height_adapter, sampling_rate):
+    MODULATION_TYPE_BY_ID = {1: ModulationTypes.AM,
+                             2: ModulationTypes.DC}
+    MODULATION_ID_BY_TYPE = dict((v, k) for (k, v) in MODULATION_TYPE_BY_ID.items())
+    LASER_POWER_ON_ID = 1
+    LASER_POWER_OFF_ID = 0
+    def __init__(self, tuning_parameter_collection, audio_server, modulator_proxy, transformer_proxy, generators,
+                 height_adapter, sampling_rate):
         QtGui.QMainWindow.__init__(self)
         self.tuning_collection = tuning_parameter_collection # The collection of all stored tuning parameters
         self.tuning_parameters = tuning_parameter_collection.tuning_parameters[0] # The current tuning parameters
         self.audio_server = audio_server
+        self.modulator_proxy = modulator_proxy
         self.transformer_proxy = transformer_proxy
         self.generators = generators
         self.generator = None
@@ -92,13 +99,20 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.sampling_rate = sampling_rate
         self.test_height = 0.0
         self.calibrate_test_mode = self.CALIBRATE_MODE
+        self.laser_enabled = True
         self.setupUi(self)
 
         # FIXME: Have to manually add button group because pyside-uic fails to compile them
         self.modulation_buttonGroup = QtGui.QButtonGroup(self)
         self.modulation_buttonGroup.setExclusive(True)
-        self.modulation_buttonGroup.addButton(self.modulation_radioButton_AM, 1)
-        self.modulation_buttonGroup.addButton(self.modulation_radioButton_DC, 2)
+        self.modulation_buttonGroup.addButton(self.modulation_radioButton_AM,
+                                              self.MODULATION_ID_BY_TYPE[ModulationTypes.AM])
+        self.modulation_buttonGroup.addButton(self.modulation_radioButton_DC,
+                                              self.MODULATION_ID_BY_TYPE[ModulationTypes.DC])
+        self.laser_power_buttonGroup = QtGui.QButtonGroup(self)
+        self.laser_power_buttonGroup.setExclusive(True)
+        self.laser_power_buttonGroup.addButton(self.laser_power_radioButton_On, self.LASER_POWER_ON_ID)
+        self.laser_power_buttonGroup.addButton(self.laser_power_radioButton_Off, self.LASER_POWER_OFF_ID)
 
         self.generator_list_model = QtGui.QStringListModel()
         self.generator_list_model.setStringList(sorted(self.generators.keys()))
@@ -133,6 +147,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.calibrate_here_button.pressed.connect(self.calibrate_here_pressed)
         self.calibrate_test_tab_widget.currentChanged.connect(self.calibrate_test_tab_changed)
         self.test_height_edit.editingFinished.connect(self.test_height_changed)
+        self.modulation_buttonGroup.buttonClicked[int].connect(self.modulation_changed)
+        self.laser_power_buttonGroup.buttonClicked[int].connect(self.laser_power_changed)
 
         self.test_height_edit.setText(str(self.test_height))
         self.calibrate_test_tab_widget.setCurrentWidget(self.calibrate_test_tab_widget.widget(self.calibrate_test_mode))
@@ -143,6 +159,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # Wait until after connecting signals to connect this model so that signals fire
         self.pattern_combobox.setModel(self.generator_list_model)
         self.pattern_combobox.setCurrentIndex(0)
+        self.modulation_radioButton_AM.setChecked(True)
+        self.laser_power_radioButton_On.setChecked(True)
 
     def build_x_min_changed(self):
         value = self.build_x_min_edit.text()
@@ -432,3 +450,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.height_adapter.height = self.tuning_parameters.height
         elif self.calibrate_test_mode == self.TEST_MODE:
             self.height_adapter.height = self.test_height
+
+    def modulation_changed(self, button_id):
+        modulation_type = self.MODULATION_TYPE_BY_ID[button_id]
+        modulator = getModulator(modulation_type, self.sampling_rate)
+        modulator.laser_enabled = self.laser_enabled
+        self.modulator_proxy.modulator = modulator
+
+    def laser_power_changed(self, button_id):
+        self.laser_enabled = (button_id == self.LASER_POWER_ON_ID)
+        self.modulator_proxy.laser_enabled = self.laser_enabled

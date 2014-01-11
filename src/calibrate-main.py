@@ -12,7 +12,7 @@ from calibrate.plane_2d_to_3d_adapter import Plane2dTo3dAdapter
 from calibrate.transformer_proxy import PositionToAudioTransformerProxy
 from calibrate.modulator_proxy import ModulatorProxy
 
-SAMPLING_RATE = 22050
+SAMPLING_RATE = 44100
 
 app = QtGui.QApplication(sys.argv)
 widget = QtGui.QMainWindow()
@@ -29,7 +29,7 @@ audio.start()
 
 generators = {'Square': shape_generators.SquareGenerator,
               'Star': shape_generators.StarGenerator}
-mainwindow = MainWindow(tuning, audio, transformer_proxy, generators, height_adapter, SAMPLING_RATE)
+mainwindow = MainWindow(tuning, audio, modulator_proxy, transformer_proxy, generators, height_adapter, SAMPLING_RATE)
 mainwindow.show()
 retcode = app.exec_()
 audio.stop()

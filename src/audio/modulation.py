@@ -37,11 +37,12 @@ class AmplitudeModulator(Modulator):
     sampling rate."""
     AM_MINIMUM_AMPLITUDE = 0.25
     AM_MAXIMUM_AMPLITUDE = 1.00
-    AM_CARRIER_FREQ_LASER_ON = 11025
-    AM_CARRIER_FREQ_LASER_OFF = 2756.25 # 11025/4
+    AM_CARRIER_FREQ_LASER_ON = 11025.0
+    AM_CARRIER_FREQ_LASER_OFF = 11025.0/4.0 # 11025/4
+    NUM_CYCLES_TO_CALCULATE = 128 # The calculated modulation waveform will contain this many full cycles before repeating
 
     def __init__(self, sampling_rate):
-        self._sampling_rate = sampling_rate
+        self._sampling_rate = float(sampling_rate)
         self._laser_enabled = False
         self._carrier_freq = None
         self._modulation_waveform = None
@@ -51,11 +52,13 @@ class AmplitudeModulator(Modulator):
     def _update_modulation(self):
         # Use a fixed set of values for modulation to speed up modulation and ensure consistency.
         if self._laser_enabled:
-            self._carrier_freq = self.AM_CARRIER_FREQ_LASER_ON
+            self._carrier_freq = float(self.AM_CARRIER_FREQ_LASER_ON)
         else:
-            self._carrier_freq = self.AM_CARRIER_FREQ_LASER_OFF
-        cycle_period = int(round(self.sampling_rate / self._carrier_freq))
-        self._modulation_waveform = [math.cos(2.0*math.pi*(float(cycle) / float(cycle_period))) for cycle in range(cycle_period)]
+            self._carrier_freq = float(self.AM_CARRIER_FREQ_LASER_OFF)
+        cycle_period = int(round(float(self.NUM_CYCLES_TO_CALCULATE) * self.sampling_rate / self._carrier_freq))
+        self._modulation_waveform = [math.cos(2.0*math.pi*(
+                float(cycle) * float(self._carrier_freq) / float(self._sampling_rate)
+            )) for cycle in range(cycle_period)]
         self._current_cycle = 0
 
     def modulate_values(self, values):
@@ -94,36 +97,34 @@ class DirectConnectionModulator(Modulator):
     """Takes a stream of stereo audio values and plays them mostly as-is, except that it scales them to 75% of total
     and adds a 25% amplitude side-tone for enabling the laser. Ideally, the side-tone frequency should be an integer
     fraction of the sampling rate."""
-    DC_SIDE_TONE_FREQ_LASER_ON = 11025
-    DC_SIDE_TONE_FREQ_LASER_OFF = 2756.25 # 11025/4
+    DC_SIDE_TONE_FREQ = 11025.0
     DC_SIDE_TONE_AMPLITUDE = 0.25
-    DC_SIDE_TONE_AUDIO_SCALE = 0.75
+    DC_AUDIO_SCALE = 0.75
 
     def __init__(self, sampling_rate):
         self._sampling_rate = sampling_rate
         self._laser_enabled = False
-        self._side_tone_freq = None
         self._side_tone_waveform = None
         self._current_cycle = None
         self._update_waveform()
 
     def _update_waveform(self):
         # Use a fixed set of values for the waveform to speed up modulation and ensure consistency.
-        if self._laser_enabled:
-            self._side_tone_freq = self.DC_SIDE_TONE_FREQ_LASER_ON
-        else:
-            self._side_tone_freq = self.DC_SIDE_TONE_FREQ_LASER_OFF
-        cycle_period = int(round(self.sampling_rate / self._side_tone_freq))
-        self._side_tone_waveform = [math.cos(2.0*math.pi*(float(cycle) / float(cycle_period))) for cycle in range(cycle_period)]
+        cycle_period = int(round(self.sampling_rate / self.DC_SIDE_TONE_FREQ))
+        self._side_tone_waveform = [math.cos(2.0*math.pi*(
+                float(cycle) * float(self.DC_SIDE_TONE_FREQ) / float(self._sampling_rate)
+            )) for cycle in range(cycle_period)]
+
         self._current_cycle = 0
 
     def modulate_values(self, values):
         new_values = []
         for (left, right) in values:
-            left *= self.DC_SIDE_TONE_AUDIO_SCALE
-            right *= self.DC_SIDE_TONE_AUDIO_SCALE
-            left += self.DC_SIDE_TONE_AMPLITUDE*self._side_tone_waveform[self._current_cycle]
-            right += self.DC_SIDE_TONE_AMPLITUDE*self._side_tone_waveform[self._current_cycle]
+            left *= self.DC_AUDIO_SCALE
+            right *= self.DC_AUDIO_SCALE
+            if self._laser_enabled:
+                left += self.DC_SIDE_TONE_AMPLITUDE*self._side_tone_waveform[self._current_cycle]
+                right += self.DC_SIDE_TONE_AMPLITUDE*self._side_tone_waveform[self._current_cycle]
             new_values.append((left, right))
             self._current_cycle = (self._current_cycle + 1) % len(self._side_tone_waveform)
         return new_values
@@ -142,4 +143,3 @@ class DirectConnectionModulator(Modulator):
     @laser_enabled.setter
     def laser_enabled(self, enabled):
         self._laser_enabled = enabled
-        self._update_waveform()

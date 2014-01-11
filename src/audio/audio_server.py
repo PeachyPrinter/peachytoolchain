@@ -26,6 +26,10 @@ class AudioServer(threading.Thread):
             num_next = self.stream.get_write_available()
             if num_next > int(self.sampling_rate/16):
                 values = self.generator.nextN(num_next)
+                min_left_val, min_right_val = min(l for (l,r) in values), min(r for (l,r) in values)
+                max_left_val, max_right_val = max(l for (l,r) in values), max(r for (l,r) in values)
+                print('DEBUG: Left: %f/%f, Right: %f/%f' % (
+                    min_left_val, max_left_val, min_right_val, max_right_val))
                 frames = audio_util.convert_values_to_frames(values)
                 self.stream.write(frames)
             else:
