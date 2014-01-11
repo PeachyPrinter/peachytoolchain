@@ -326,6 +326,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.build_x_max_edit.setText(str(tpc.build_x_max))
         self.build_y_min_edit.setText(str(tpc.build_y_min))
         self.build_y_max_edit.setText(str(tpc.build_y_max))
+        button_id = self.MODULATION_ID_BY_TYPE[tpc.modulation]
+        button = self.modulation_buttonGroup.button(button_id)
+        button.setChecked(True)
+        # Needs to be updated manually, since signal only triggers on click
+        self.modulation_changed(button_id)
 
     def update_values_from_tuning_parameters(self):
         tp = self.tuning_parameters
@@ -453,6 +458,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def modulation_changed(self, button_id):
         modulation_type = self.MODULATION_TYPE_BY_ID[button_id]
+        self.tuning_collection.modulation = modulation_type
         modulator = getModulator(modulation_type, self.sampling_rate)
         modulator.laser_enabled = self.laser_enabled
         self.modulator_proxy.modulator = modulator

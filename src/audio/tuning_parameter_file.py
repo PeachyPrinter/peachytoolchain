@@ -11,6 +11,7 @@ class TuningParameterFileHandler(object):
             'build_x_max': tpc.build_x_max,
             'build_y_min': tpc.build_y_min,
             'build_y_max': tpc.build_y_max,
+            'modulation': tpc.modulation,
         }
         tp_list = []
         for tp in tpc.tuning_parameters:
@@ -44,6 +45,7 @@ class TuningParameterFileHandler(object):
         tpc.build_x_max = in_dict['build_x_max']
         tpc.build_y_min = in_dict['build_y_min']
         tpc.build_y_max = in_dict['build_y_max']
+        tpc.modulation = in_dict['modulation']
         tp_dicts = in_dict['tuning_parameters']
         tps = []
         for in_tp_dict in tp_dicts:

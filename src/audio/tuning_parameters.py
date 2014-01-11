@@ -1,3 +1,5 @@
+from .modulation import ModulationTypes
+
 class TuningParameterCollection(object):
     """
     Holds multiple tuning parameters at various heights. Each acts as a calibration point.
@@ -7,6 +9,7 @@ class TuningParameterCollection(object):
     build_x_max = 1.0
     build_y_min = -1.0
     build_y_max = 1.0
+    modulation = ModulationTypes.AM
 
     def __init__(self):
         self.tuning_parameters = [TuningParameters(),]
@@ -49,6 +52,7 @@ class TuningParameterCollection(object):
         self.build_x_max = other.build_x_max
         self.build_y_min = other.build_y_min
         self.build_y_max = other.build_y_max
+        self.modulation = other.modulation
         self.tuning_parameters = []
         for other_tp in other.tuning_parameters:
             my_tp = TuningParameters()
