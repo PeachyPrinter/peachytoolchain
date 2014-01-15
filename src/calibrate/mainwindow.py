@@ -120,6 +120,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # Set model now so selection model will be ready for signal creation
         self.calibrations_listview.setModel(self.calibrations_list_model)
 
+        self.drips_per_height_edit.editingFinished.connect(self.drips_per_height_changed)
+        self.sublayer_height_edit.editingFinished.connect(self.sublayer_height_changed)
         self.build_x_min_edit.editingFinished.connect(self.build_x_min_changed)
         self.build_x_max_edit.editingFinished.connect(self.build_x_max_changed)
         self.build_y_min_edit.editingFinished.connect(self.build_y_min_changed)
@@ -161,6 +163,40 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pattern_combobox.setCurrentIndex(0)
         self.modulation_radioButton_AM.setChecked(True)
         self.laser_power_radioButton_On.setChecked(True)
+
+    def drips_per_height_changed(self):
+        value = self.drips_per_height_edit.text()
+        try:
+            drips_per_height = float(value)
+        except ValueError:
+            # Invalid value entered
+            drips_per_height = None
+        if drips_per_height is not None and drips_per_height <= 0:
+            # Invalid value entered
+            drips_per_height = None
+        if drips_per_height is None:
+            # Invalid value -- reset
+            drips_per_height = self.tuning_collection.drips_per_height
+        else:
+            self.tuning_collection.drips_per_height = drips_per_height
+        self.drips_per_height_edit.setText(str(drips_per_height))
+
+    def sublayer_height_changed(self):
+        value = self.sublayer_height_edit.text()
+        try:
+            sublayer_height = float(value)
+        except ValueError:
+            # Invalid value entered
+            sublayer_height = None
+        if sublayer_height is not None and sublayer_height <= 0:
+            # Invalid value entere
+            sublayer_height = None
+        if sublayer_height is None:
+            # Invalid value -- reset
+            sublayer_height = self.tuning_collection.sublayer_height
+        else:
+            self.tuning_collection.sublayer_height = sublayer_height
+        self.sublayer_height_edit.setText(str(sublayer_height))
 
     def build_x_min_changed(self):
         value = self.build_x_min_edit.text()
@@ -252,6 +288,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             # Invalid value entered -- reset
             speed = self.generator.speed
             self.speed_edit.setText(str(speed))
+        if speed <= 0:
+            speed = self.generator.speed
+            self.speed_edit.setText(str(speed))
         return speed
 
     def size_changed(self):
@@ -262,6 +301,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             size = float(self.size_edit.text())
         except ValueError:
             # Invalid value entered -- reset
+            size = self.generator.size
+            self.side_edit.setText(str(size))
+        if size <= 0:
             size = self.generator.size
             self.side_edit.setText(str(size))
         return size
@@ -322,6 +364,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def update_build_parameters(self):
         tpc = self.tuning_collection
+        self.drips_per_height_edit.setText(str(tpc.drips_per_height))
+        self.sublayer_height_edit.setText(str(tpc.sublayer_height))
         self.build_x_min_edit.setText(str(tpc.build_x_min))
         self.build_x_max_edit.setText(str(tpc.build_x_max))
         self.build_y_min_edit.setText(str(tpc.build_y_min))

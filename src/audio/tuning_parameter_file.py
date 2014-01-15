@@ -12,6 +12,8 @@ class TuningParameterFileHandler(object):
             'build_y_min': tpc.build_y_min,
             'build_y_max': tpc.build_y_max,
             'modulation': tpc.modulation,
+            'drips_per_height': tpc.drips_per_height,
+            'sublayer_height': tpc.sublayer_height,
         }
         tp_list = []
         for tp in tpc.tuning_parameters:
@@ -46,6 +48,8 @@ class TuningParameterFileHandler(object):
         tpc.build_y_min = in_dict['build_y_min']
         tpc.build_y_max = in_dict['build_y_max']
         tpc.modulation = in_dict['modulation']
+        tpc.drips_per_height = in_dict['drips_per_height']
+        tpc.sublayer_height = in_dict['sublayer_height']
         tp_dicts = in_dict['tuning_parameters']
         tps = []
         for in_tp_dict in tp_dicts:

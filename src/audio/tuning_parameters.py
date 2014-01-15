@@ -10,6 +10,8 @@ class TuningParameterCollection(object):
     build_y_min = -1.0
     build_y_max = 1.0
     modulation = ModulationTypes.AM
+    drips_per_height = 100.0
+    sublayer_height = 0.01
 
     def __init__(self):
         self.tuning_parameters = [TuningParameters(),]
@@ -53,6 +55,8 @@ class TuningParameterCollection(object):
         self.build_y_min = other.build_y_min
         self.build_y_max = other.build_y_max
         self.modulation = other.modulation
+        self.drips_per_height = other.drips_per_height
+        self.sublayer_height = other.sublayer_height
         self.tuning_parameters = []
         for other_tp in other.tuning_parameters:
             my_tp = TuningParameters()
