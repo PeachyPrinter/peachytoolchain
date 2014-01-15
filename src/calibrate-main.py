@@ -28,7 +28,8 @@ audio = AudioServer(modulator_proxy, SAMPLING_RATE)
 audio.start()
 
 generators = {'Square': shape_generators.SquareGenerator,
-              'Star': shape_generators.StarGenerator}
+              'Star': shape_generators.StarGenerator,
+              'Zero': shape_generators.NullGenerator}
 mainwindow = MainWindow(tuning, audio, modulator_proxy, transformer_proxy, generators, height_adapter, SAMPLING_RATE)
 mainwindow.show()
 retcode = app.exec_()

@@ -4,7 +4,7 @@ import math
 class NullGenerator(object):
     def __init__(self, sampling_rate, speed, size, center):
         """
-        Generator that always returns (0.0, 0.0) coordinates.
+        Generator that always returns coordinates from the center position..
         """
         self.sampling_rate = int(sampling_rate)
         self.speed = float(speed)
@@ -13,7 +13,7 @@ class NullGenerator(object):
 
     def nextN(self, n):
         """Returns the next N points as a list of (x, y) tuples."""
-        return [(0.0, 0.0)]*n
+        return [self.center]*n
 
 class SquareGenerator(object):
     def __init__(self, sampling_rate, speed, size, center):
