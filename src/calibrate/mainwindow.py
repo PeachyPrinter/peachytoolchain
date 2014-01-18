@@ -17,7 +17,6 @@ class TuningParameterListModel(QtCore.QAbstractListModel):
     def index(self, row, col=0, parent=QtCore.QModelIndex()):
         if parent.isValid():
             return QtCore.QModelIndex()
-        tp = self._collection.tuning_parameters[row]
         return self.createIndex(row, col, None)
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
@@ -85,11 +84,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     MODULATION_ID_BY_TYPE = dict((v, k) for (k, v) in MODULATION_TYPE_BY_ID.items())
     LASER_POWER_ON_ID = 1
     LASER_POWER_OFF_ID = 0
+
     def __init__(self, tuning_parameter_collection, audio_server, modulator_proxy, transformer_proxy, generators,
                  height_adapter, sampling_rate):
         QtGui.QMainWindow.__init__(self)
-        self.tuning_collection = tuning_parameter_collection # The collection of all stored tuning parameters
-        self.tuning_parameters = tuning_parameter_collection.tuning_parameters[0] # The current tuning parameters
+        self.tuning_collection = tuning_parameter_collection  # The collection of all stored tuning parameters
+        self.tuning_parameters = tuning_parameter_collection.tuning_parameters[0]  # The current tuning parameters
         self.audio_server = audio_server
         self.modulator_proxy = modulator_proxy
         self.transformer_proxy = transformer_proxy
@@ -102,7 +102,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.laser_enabled = True
         self.setupUi(self)
 
-        # FIXME: Have to manually add button group because pyside-uic fails to compile them
+        # NOTE: Have to manually add button group because pyside-uic fails to compile them
         self.modulation_buttonGroup = QtGui.QButtonGroup(self)
         self.modulation_buttonGroup.setExclusive(True)
         self.modulation_buttonGroup.addButton(self.modulation_radioButton_AM,
@@ -120,12 +120,47 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # Set model now so selection model will be ready for signal creation
         self.calibrations_listview.setModel(self.calibrations_list_model)
 
-        self.drips_per_height_edit.editingFinished.connect(self.drips_per_height_changed)
-        self.sublayer_height_edit.editingFinished.connect(self.sublayer_height_changed)
-        self.build_x_min_edit.editingFinished.connect(self.build_x_min_changed)
-        self.build_x_max_edit.editingFinished.connect(self.build_x_max_changed)
-        self.build_y_min_edit.editingFinished.connect(self.build_y_min_changed)
-        self.build_y_max_edit.editingFinished.connect(self.build_y_max_changed)
+        self.build_x_min_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.build_x_min_edit, self.tuning_collection, 'build_x_min')
+        )
+        self.build_y_min_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.build_y_min_edit, self.tuning_collection, 'build_y_min')
+        )
+        self.build_x_max_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.build_x_max_edit, self.tuning_collection, 'build_x_max')
+        )
+        self.build_y_max_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.build_y_max_edit, self.tuning_collection, 'build_y_max')
+        )
+        self.dwell_x_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.dwell_x_edit, self.tuning_collection, 'dwell_x')
+        )
+        self.dwell_y_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.dwell_y_edit, self.tuning_collection, 'dwell_y')
+        )
+        self.velocity_x_max_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.velocity_x_max_edit, self.tuning_collection, 'velocity_x_max',
+                                      lambda x: x > 0)
+        )
+        self.velocity_y_max_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.velocity_y_max_edit, self.tuning_collection, 'velocity_y_max',
+                                      lambda x: x > 0)
+        )
+        self.accel_x_max_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.accel_x_max_edit, self.tuning_collection, 'accel_x_max', lambda x: x > 0)
+        )
+        self.accel_y_max_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.accel_y_max_edit, self.tuning_collection, 'accel_y_max', lambda x: x > 0)
+        )
+        self.drips_per_height_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.drips_per_height_edit, self.tuning_collection, 'drips_per_height',
+                                      lambda x: x > 0)
+        )
+        self.sublayer_height_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.sublayer_height_edit, self.tuning_collection, 'sublayer_height',
+                                      lambda x: x > 0)
+        )
+
         self.x_offset_spin.valueChanged.connect(self.x_offset_changed)
         self.y_offset_spin.valueChanged.connect(self.y_offset_changed)
         self.x_scale_spin.valueChanged.connect(self.x_scale_changed)
@@ -148,8 +183,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.delete_calibration_button.pressed.connect(self.delete_calibration_pressed)
         self.calibrate_here_button.pressed.connect(self.calibrate_here_pressed)
         self.calibrate_test_tab_widget.currentChanged.connect(self.calibrate_test_tab_changed)
-        self.test_height_edit.editingFinished.connect(self.test_height_changed)
+        self.test_height_edit.editingFinished.connect(
+            self.make_edit_signal_handler(self.test_height_edit, self, 'test_height', lambda x: x>=0,
+                                      self.update_height_adapter)
+        )
+        #noinspection PyUnresolvedReferences
         self.modulation_buttonGroup.buttonClicked[int].connect(self.modulation_changed)
+        #noinspection PyUnresolvedReferences
         self.laser_power_buttonGroup.buttonClicked[int].connect(self.laser_power_changed)
 
         self.test_height_edit.setText(str(self.test_height))
@@ -164,79 +204,32 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.modulation_radioButton_AM.setChecked(True)
         self.laser_power_radioButton_On.setChecked(True)
 
-    def drips_per_height_changed(self):
-        value = self.drips_per_height_edit.text()
+    def make_edit_signal_handler(self, edit, container, var_name, validator=None, after=None):
+        def fn():
+            self._parse_edit_as_float(edit, container, var_name, validator, after)
+        return fn
+
+    def _parse_edit_as_float(self, edit, container, var_name, validator=None, after=None):
+        text = edit.text()
+        valid = True
+        value = None
         try:
-            drips_per_height = float(value)
+            value = float(text)
         except ValueError:
-            # Invalid value entered
-            drips_per_height = None
-        if drips_per_height is not None and drips_per_height <= 0:
-            # Invalid value entered
-            drips_per_height = None
-        if drips_per_height is None:
-            # Invalid value -- reset
-            drips_per_height = self.tuning_collection.drips_per_height
+            valid = False
+        if valid and validator:
+            valid = validator(value)
+        if not valid:
+            # Reset editbox with original value of var
+            value = getattr(container, var_name)
         else:
-            self.tuning_collection.drips_per_height = drips_per_height
-        self.drips_per_height_edit.setText(str(drips_per_height))
-
-    def sublayer_height_changed(self):
-        value = self.sublayer_height_edit.text()
-        try:
-            sublayer_height = float(value)
-        except ValueError:
-            # Invalid value entered
-            sublayer_height = None
-        if sublayer_height is not None and sublayer_height <= 0:
-            # Invalid value entere
-            sublayer_height = None
-        if sublayer_height is None:
-            # Invalid value -- reset
-            sublayer_height = self.tuning_collection.sublayer_height
-        else:
-            self.tuning_collection.sublayer_height = sublayer_height
-        self.sublayer_height_edit.setText(str(sublayer_height))
-
-    def build_x_min_changed(self):
-        value = self.build_x_min_edit.text()
-        try:
-            x_min = float(value)
-        except ValueError:
-            # Invalid value entered -- reset
-            x_min = self.tuning_collection.build_x_min
-            self.build_x_min_edit.setText(str(x_min))
-        self.tuning_collection.build_x_min = x_min
-
-    def build_x_max_changed(self):
-        value = self.build_x_max_edit.text()
-        try:
-            x_max = float(value)
-        except ValueError:
-            # Invalid value entered -- reset
-            x_max = self.tuning_collection.build_x_max
-            self.build_x_max_edit.setText(x_max)
-        self.tuning_collection.build_x_max = x_max
-
-    def build_y_min_changed(self):
-        value = self.build_y_min_edit.text()
-        try:
-            y_min = float(value)
-        except ValueError:
-            # Invalid value entered -- reset
-            y_min = self.tuning_collection.build_y_min
-            self.build_y_min_edit.setText(str(y_min))
-        self.tuning_collection.build_y_min = y_min
-
-    def build_y_max_changed(self):
-        value = self.build_y_max_edit.text()
-        try:
-            y_max = float(value)
-        except ValueError:
-            # Invalid value entered -- reset
-            y_max = self.tuning_collection.build_y_max
-            self.build_y_max_edit.setText(str(y_max))
-        self.tuning_collection.build_y_max = y_max
+            # Save value on container
+            setattr(container, var_name, value)
+            # Update editbox to use proper string of the parsed float value
+        text = str(value)
+        edit.setText(text)
+        if after:
+            after()
 
     def x_offset_changed(self, value):
         self.tuning_parameters.x_offset = value
@@ -271,10 +264,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             QtCore.Qt.DisplayRole
         )
         self.generator = self.generators[pattern_name](
-                self.sampling_rate,
-                self.get_speed(),
-                self.get_size(),
-                self.get_shape_center()
+            self.sampling_rate,
+            self.get_speed(),
+            self.get_size(),
+            self.get_shape_center()
         )
         self.height_adapter.generator = self.generator
 
@@ -290,7 +283,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.speed_edit.setText(str(speed))
         if speed <= 0:
             speed = self.generator.speed
-            self.speed_edit.setText(str(speed))
+        self.speed_edit.setText(str(speed))
         return speed
 
     def size_changed(self):
@@ -305,7 +298,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.side_edit.setText(str(size))
         if size <= 0:
             size = self.generator.size
-            self.side_edit.setText(str(size))
+        self.size_edit.setText(str(size))
         return size
 
     def shape_center_x_changed(self):
@@ -326,14 +319,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if x is None or y is None:
             # Invalid value entered -- reset
             (x, y) = self.generator.center
-            self.shape_center_x_edit.setText(str(x))
-            self.shape_center_y_edit.setText(str(y))
-        return (x, y)
+        self.shape_center_x_edit.setText(str(x))
+        self.shape_center_y_edit.setText(str(y))
+        return x, y
 
     def save_clicked(self):
         (filename, selected_filter) = QtGui.QFileDialog.getSaveFileName(
-            self.centralwidget, #parent
-            "Save tuning parameters", #caption
+            self.centralwidget,  # parent
+            "Save tuning parameters",  # caption
         )
         if not filename:
             return
@@ -341,16 +334,17 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def load_clicked(self):
         (filename, selected_filter) = QtGui.QFileDialog.getOpenFileName(
-            self.centralwidget, #parent
-            "Open tuning parameter file", #caption
+            self.centralwidget,  # parent
+            "Open tuning parameter file",  # caption
         )
         if not filename:
             return
         if not os.path.exists(filename):
+            #noinspection PyArgumentList
             QtGui.QMessageBox.critical(
                 parent=self,
                 caption="No such file",
-                text="Unable to open file %s: no such file exists." % filename,
+                text="Unable to open file %s: no such file exists." % filename
             )
             return
         tuning_parameters = TuningParameterFileHandler.read_from_file(filename)
@@ -364,12 +358,18 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def update_build_parameters(self):
         tpc = self.tuning_collection
-        self.drips_per_height_edit.setText(str(tpc.drips_per_height))
-        self.sublayer_height_edit.setText(str(tpc.sublayer_height))
         self.build_x_min_edit.setText(str(tpc.build_x_min))
         self.build_x_max_edit.setText(str(tpc.build_x_max))
         self.build_y_min_edit.setText(str(tpc.build_y_min))
         self.build_y_max_edit.setText(str(tpc.build_y_max))
+        self.velocity_x_max_edit.setText(str(tpc.velocity_x_max))
+        self.velocity_y_max_edit.setText(str(tpc.velocity_y_max))
+        self.accel_x_max_edit.setText(str(tpc.accel_x_max))
+        self.accel_y_max_edit.setText(str(tpc.accel_y_max))
+        self.dwell_x_edit.setText(str(tpc.dwell_x))
+        self.dwell_y_edit.setText(str(tpc.dwell_y))
+        self.drips_per_height_edit.setText(str(tpc.drips_per_height))
+        self.sublayer_height_edit.setText(str(tpc.sublayer_height))
         button_id = self.MODULATION_ID_BY_TYPE[tpc.modulation]
         button = self.modulation_buttonGroup.button(button_id)
         button.setChecked(True)
@@ -399,6 +399,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             selection_model.select(index, QtGui.QItemSelectionModel.ClearAndSelect)
         return index
 
+    #noinspection PyUnusedLocal
     def calibration_selection_changed(self, selected, deselected):
         index = self.get_selected_calibration_index()
         tp = self.calibrations_list_model.data(index, role=QtCore.Qt.UserRole)
@@ -465,7 +466,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             return
         index = self.get_selected_calibration_index()
         self.calibrations_list_model.removeRow(index.row())
-        self.delete_calibration_button.setEnabled(self.calibrations_list_model.rowCount() > 1)
+        self.delete_calibration_button.setEnabled(self.calibrations_list_model.rowCount()>1)
         # Selection causes update of current tuning parameters as a side-effect, so no need to do it explicitly here
 
     def calibrate_here_pressed(self):
@@ -482,16 +483,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def calibrate_test_tab_changed(self, index):
         self.calibrate_test_mode = index
-        self.update_height_adapter()
-
-    def test_height_changed(self):
-        try:
-            height = float(self.test_height_edit.text())
-        except ValueError:
-            # Invalid value entered -- reset
-            height = self.test_height
-            self.test_height_edit.setText(str(height))
-        self.test_height = height
         self.update_height_adapter()
 
     def update_height_adapter(self):

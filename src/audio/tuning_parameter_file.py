@@ -11,9 +11,15 @@ class TuningParameterFileHandler(object):
             'build_x_max': tpc.build_x_max,
             'build_y_min': tpc.build_y_min,
             'build_y_max': tpc.build_y_max,
-            'modulation': tpc.modulation,
+            'dwell_x': tpc.dwell_x,
+            'dwell_y': tpc.dwell_y,
+            'velocity_x_max': tpc.velocity_x_max,
+            'velocity_y_max': tpc.velocity_y_max,
+            'accel_x_max': tpc.accel_x_max,
+            'accel_y_max': tpc.accel_y_max,
             'drips_per_height': tpc.drips_per_height,
             'sublayer_height': tpc.sublayer_height,
+            'modulation': tpc.modulation,
         }
         tp_list = []
         for tp in tpc.tuning_parameters:
@@ -47,9 +53,15 @@ class TuningParameterFileHandler(object):
         tpc.build_x_max = in_dict['build_x_max']
         tpc.build_y_min = in_dict['build_y_min']
         tpc.build_y_max = in_dict['build_y_max']
-        tpc.modulation = in_dict['modulation']
+        tpc.dwell_x = in_dict['dwell_x']
+        tpc.dwell_y = in_dict['dwell_y']
+        tpc.velocity_x_max = in_dict['velocity_x_max']
+        tpc.velocity_y_max = in_dict['velocity_y_max']
+        tpc.accel_x_max = in_dict['accel_x_max']
+        tpc.accel_y_max = in_dict['accel_y_max']
         tpc.drips_per_height = in_dict['drips_per_height']
         tpc.sublayer_height = in_dict['sublayer_height']
+        tpc.modulation = in_dict['modulation']
         tp_dicts = in_dict['tuning_parameters']
         tps = []
         for in_tp_dict in tp_dicts:

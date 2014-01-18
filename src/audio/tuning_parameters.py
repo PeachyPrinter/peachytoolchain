@@ -5,13 +5,19 @@ class TuningParameterCollection(object):
     Holds multiple tuning parameters at various heights. Each acts as a calibration point.
     """
     tuning_parameters = []
-    build_x_min = -1.0
-    build_x_max = 1.0
-    build_y_min = -1.0
-    build_y_max = 1.0
-    modulation = ModulationTypes.AM
+    build_x_min = -50.0
+    build_y_min = -50.0
+    build_x_max = 50.0
+    build_y_max = 50.0
+    dwell_x = 0.0
+    dwell_y = 0.0
+    velocity_x_max = 6000.0
+    velocity_y_max = 6000.0
+    accel_x_max = 180000.0
+    accel_y_max = 180000.0
     drips_per_height = 100.0
     sublayer_height = 0.01
+    modulation = ModulationTypes.AM
 
     def __init__(self):
         self.tuning_parameters = [TuningParameters(),]
@@ -54,9 +60,15 @@ class TuningParameterCollection(object):
         self.build_x_max = other.build_x_max
         self.build_y_min = other.build_y_min
         self.build_y_max = other.build_y_max
-        self.modulation = other.modulation
+        self.dwell_x = other.dwell_x
+        self.dwell_y = other.dwell_y
+        self.velocity_x_max = other.velocity_x_max
+        self.velocity_y_max = other.velocity_y_max
+        self.accel_x_max = other.accel_x_max
+        self.accel_y_max = other.accel_y_max
         self.drips_per_height = other.drips_per_height
         self.sublayer_height = other.sublayer_height
+        self.modulation = other.modulation
         self.tuning_parameters = []
         for other_tp in other.tuning_parameters:
             my_tp = TuningParameters()

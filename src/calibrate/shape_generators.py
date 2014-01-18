@@ -72,7 +72,7 @@ class SquareGenerator(object):
             self._update_cycles()
 
     @property
-    def speed(self, speed):
+    def speed(self):
         return self._speed
 
     @speed.setter
