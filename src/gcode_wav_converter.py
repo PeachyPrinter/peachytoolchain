@@ -18,32 +18,6 @@ existing output_file.
 In order for the wav file to be useful to you, this script needs to know several parameters of your
 particular printer. Please adjust these in the PrinterParameters class below.
 """
-class PrinterParameters:
-    """
-    Parameters for your specific printer. Edit these as needed. Unless specified, distances are in
-    millimeters.
-    """
-    WaveSamplingRate = 8000 # Value in samples per second (Hertz). The default should be more than enough.
-    MaxFeedRate = 1200.0*60*10.0    # The maximum feed rate in millimeters per minute.
-    ConstantFeedRate = False# If True, always use max feed rate instead of given rate
-    XAxisChannel = 0        # These denote which channel of the WAV file is connected to which axis.
-    YAxisChannel = 1        # Channel 0 is the left stereo audio channel, channel 1 is right.
-    XAxisMinPos = 0.0     # Location in physical space (as defined in g-code) when the X-axis is set to
-                            # the minimum possible audio output value.
-    XAxisMaxPos = 25.4*10.0     # Location in physical space (as defined in g-code) when the X-axis is set to
-                            # the maximum possible audio output value.
-    YAxisMinPos = 0.0     # Location in physical space (as defined in g-code) when the Y-axis is set to
-                            # the minimum possible audio output value.
-    YAxisMaxPos = 25.4*10.0     # Location in physical space (as defined in g-code) when the Y-axis is set to
-                            # the maximum possible audio output value.
-    XDwellPos = 12.7*10.0      # Location in physical space where the X-axis will dwell between layers.
-    YDwellPos = 12.7*10.0      # Location in physical space where the Y-axis will dwell between layers.
-    XAxisMaxVel = 1200.0*60*10.0    # The maximum speed the laser can move along the X-axis in millimetres per minute.
-    YAxisMaxVel = 1200.0*60*10.0    # The maximum speed the laser can move along the Y-axis in millimetres per minute.
-    XAxisMaxAcc = 45000000.0*10.0*10.0    # The maximum acceleration of the X-axis in millimetres per second squared.
-    YAxisMaxAcc = 45000000.0*10.0*10.0    # The maximum acceleration of the Y-axis in millimetres per second squared.
-    TestTimeScale = 1.0     # Multiply all speeds by this amount. For testing only.
-
 #### End of user-configurable parameters. Please do not modify anything below this line.
 
 import math
@@ -55,26 +29,24 @@ from audio.transform import PositionToAudioTransformer
 from audio.tuning_parameter_file import TuningParameterFileHandler
 from audio.util import convert_values_to_frames, clip_values
 
+
+WAVE_SAMPLING_RATE = 8000
 MIN_STEP = 0.001*100.0 # Minimum possible step in millimetres. Used as a stopping condition.
 DEBUG = False # Set to True for debugging messages
-REPLAY_BUFFER_LEN = 93 # frames
-
 
 class MachineState:
     """Represents the internal state of the machine, including position, velocity, and time."""
-    x_pos = 0.0         # Current x and y position (in millimeters)
+    x_pos = 0.0         # Current x and y position (in millimetres)
     y_pos = 0.0
     z_pos = 0.0         # z is special, since we have to wait for it, rather than control it
-    x_vel = 0.0         # Current x and y velocity (in millimeters per second)
+    x_vel = 0.0         # Current x and y velocity (in millimetres per second)
     y_vel = 0.0
     time = 0.0          # In seconds
     frame_num = 0       # Number of frames in the wav file. Tracked here because wave_write objects can't say.
-    unit_scale = 1.0    # In units per millimetre. If set to inches, scale all movements by 25.4 mm/inch.
     extruder_pwm = 1.0  # The PWM fraction that the G-code was telling the printer to use. Since our printer
                         # can't adjust extrusion rate, we will have to scale the feed rate instead. 
     extruder_on = False # We need to rapid during a movement with extrusion off, since we can't turn off the laser.
     feed_rate = None    # The last requested feed rate in millimetres/minute. Saved in case a G-code doesn't specify it.
-    replay_buffer = deque([], REPLAY_BUFFER_LEN)
 
 class GcodeConverter:
     KNOWN_GCODES = {
@@ -90,10 +62,9 @@ class GcodeConverter:
                     'M113': 'mCommandSetExtruderPWM',
                    }
 
-    def __init__(self, printer_parameters):
-        self.parameters = printer_parameters
+    def __init__(self, tuning_collection):
+        self.tuning_collection = tuning_collection
         self.warned_once_codes = set()  # The set of codes that we have already warned the user are not supported.
-        self.tuning_collection = TuningParameterFileHandler.read_from_file('tuning.dat')
         self.transformer = PositionToAudioTransformer(self.tuning_collection)
 
     def convertGcode(self, gcode_filename, wave_filename, cue_filename):
@@ -115,7 +86,7 @@ class GcodeConverter:
         wave_file = wave.open(wave_filename, 'wb')
         wave_file.setnchannels(2)
         wave_file.setsampwidth(2)
-        wave_file.setframerate(self.parameters.WaveSamplingRate)
+        wave_file.setframerate(WAVE_SAMPLING_RATE)
         return wave_file
 
     def createCueFile(self, cue_filename):
@@ -149,15 +120,16 @@ class GcodeConverter:
             else:
                 print("WARNING: Code %s is not currently supported and will be ignored." % command)
                 self.warned_once_codes.add(command)
-        except Exception as e:
+        except Exception:
             print("Exception while processing instruction '%s'" % gcode_instruction)
             raise
-            
+
     def gCommandUseInches(self, params, state, wave_file, cue_file):
-        state.unit_scale = 25.4     # millimetres per inch
-        
+        raise ValueError('Command G20 (units in inches) is not supported. Please use millimetres.')
+
     def gCommandUseMillimetres(self, params, state, wave_file, cue_file):
-        state.unit_scale = 1.0      # millimetres is the base unit
+        # This is the default; no processing necessary
+        pass
 
     def gCommandMove(self, params, state, wave_file, cue_file):
         # Moves from the current position to the position given in the params. This currently makes several
@@ -171,13 +143,13 @@ class GcodeConverter:
         feed_rate = None
         for param in params:
             if param.startswith('X'):
-                x_pos = float(param[1:]) * state.unit_scale
+                x_pos = float(param[1:])
             elif param.startswith('Y'):
-                y_pos = float(param[1:]) * state.unit_scale
+                y_pos = float(param[1:])
             elif param.startswith('Z'):
-                z_pos = float(param[1:]) * state.unit_scale
+                z_pos = float(param[1:])
             elif param.startswith('F'):
-                feed_rate = float(param[1:]) * state.unit_scale
+                feed_rate = float(param[1:]) / 60.0
             elif param.startswith('E'):
                 # The length of extrudate -- ignore
                 pass
@@ -192,14 +164,22 @@ class GcodeConverter:
             if state.extruder_pwm == 0.0:
                 # Ignore feed rate, since we will rapid instead
                 pass
-            elif feed_rate > self.parameters.MaxFeedRate:
-                print("WARNING: Requested feed rate %f mm/minute exceeds maximum machine feed rate %f mm/minute. "
-                      "Clipping to maximum." % (feed_rate, self.parameters.MaxFeedRate))
-            elif feed_rate / state.extruder_pwm > self.parameters.MaxFeedRate:
-                print("WARNING: Effective feed rate %f mm/minute (based on requested feed rate %f mm/minute "
-                      "and extruder PWM duty cycle %.1f%%) exceeds maximum machine feed rate %f mm/minute. "
+            elif feed_rate > self.tuning_collection.velocity_x_max:
+                print("WARNING: Requested feed rate %f mm/second exceeds maximum machine X axis velocity of %f mm/second. "
+                      "Clipping to maximum." % (feed_rate, self.tuning_collection.velocity_x_max))
+            elif feed_rate > self.tuning_collection.velocity_y_max:
+                print("WARNING: Requested feed rate %f mm/second exceeds maximum machine Y axis velocity of %f mm/second. "
+                      "Clipping to maximum." % (feed_rate, self.tuning_collection.velocity_y_max))
+            elif feed_rate / state.extruder_pwm > self.tuning_collection.velocity_x_max:
+                print("WARNING: Effective feed rate %f mm/second (based on requested feed rate %f mm/second "
+                      "and extruder PWM duty cycle %.1f%%) exceeds maximum machine machine X axis velocity of %f mm/second. "
                       "Clipping to maximum." % (feed_rate / state.extruder_pwm, feed_rate, state.extruder_pwm*100.0,
-                          self.parameters.MaxFeedRate))
+                          self.tuning_collection.velocity_x_max))
+            elif feed_rate / state.extruder_pwm > self.tuning_collection.velocity_y_max:
+                print("WARNING: Effective feed rate %f mm/second (based on requested feed rate %f mm/second "
+                      "and extruder PWM duty cycle %.1f%%) exceeds maximum machine machine Y axis velocity of %f mm/second. "
+                      "Clipping to maximum." % (feed_rate / state.extruder_pwm, feed_rate, state.extruder_pwm*100.0,
+                          self.tuning_collection.velocity_y_max))
             state.feed_rate = feed_rate
 
         # 2. Determine what movement is being requested
@@ -208,14 +188,14 @@ class GcodeConverter:
             self.moveToNewLayerHeight(z_pos, state, wave_file, cue_file)
         if x_pos is not None or y_pos is not None:
             # Lateral movement
-            if x_pos > self.parameters.XAxisMaxPos:
-                raise ValueError("Requested x position '%f' greater than machine maximum '%f'" % (x_pos, self.parameters.XAxisMaxPos)) 
-            if x_pos < self.parameters.XAxisMinPos:
-                raise ValueError("Requested x position '%f' less than machine minimum '%f'" % (x_pos, self.parameters.XAxisMinPos)) 
-            if y_pos > self.parameters.YAxisMaxPos:
-                raise ValueError("Requested y position '%f' greater than machine maximum '%f'" % (y_pos, self.parameters.YAxisMaxPos)) 
-            if y_pos < self.parameters.YAxisMinPos:
-                raise ValueError("Requested y position '%f' less than machine minimum '%f'" % (y_pos, self.parameters.YAxisMinPos)) 
+            if x_pos > self.tuning_collection.build_x_max:
+                raise ValueError("Requested x position '%f' greater than machine maximum '%f'" % (x_pos, self.tuning_collection.build_x_max))
+            if x_pos < self.tuning_collection.build_x_min:
+                raise ValueError("Requested x position '%f' less than machine minimum '%f'" % (x_pos, self.tuning_collection.build_x_min))
+            if y_pos > self.tuning_collection.build_y_max:
+                raise ValueError("Requested y position '%f' greater than machine maximum '%f'" % (y_pos, self.tuning_collection.build_y_max)) 
+            if y_pos < self.tuning_collection.build_y_min:
+                raise ValueError("Requested y position '%f' less than machine minimum '%f'" % (y_pos, self.tuning_collection.build_y_min)) 
             self.moveLateral(x_pos, y_pos, state, wave_file, rapid=False)
             
     def moveToNewLayerHeight(self, new_z_pos, state, wave_file, cue_file):
@@ -224,44 +204,13 @@ class GcodeConverter:
         if new_z_pos < state.z_pos:
             print("G-code requested us to move down Z axis, but we can't! Continuing at current height.")
             return
-        dwell_time = 0.01 # seconds
-        old_x_pos = state.x_pos
-        old_y_pos = state.y_pos
-        self.moveLateral(self.parameters.XDwellPos, self.parameters.YDwellPos, state, wave_file, rapid=True, record=False)
-        dwell_mid_time = state.time + dwell_time/2.0
-        dwell_end_time = state.time + dwell_time
-        # Wait the first half of the time before inserting the cue
-        while state.time < dwell_mid_time:
-            self.addAudioFrame(self.parameters.XDwellPos, self.parameters.YDwellPos, 0.0, state, wave_file, record=False)
-            step_time = (1.0/float(self.parameters.WaveSamplingRate))
-            state.time += step_time
+        #:TODO: Laser off, move to dwell, wait one modulation cycle, return to position, laser on, and indicate loop frames
         state.z_pos = new_z_pos
         if DEBUG:
             print('insert layer break: time=%f, z_pos=%f' % (state.time, state.z_pos))
         cue_file.write_cue(state.frame_num)
-        # Wait the second half of the time after inserting the cue
-        while state.time < dwell_mid_time:
-            self.addAudioFrame(self.parameters.XDwellPos, self.parameters.YDwellPos, 0.0, state, wave_file, record=False)
-            step_time = (1.0/float(self.parameters.WaveSamplingRate))
-            state.time += step_time
-        # Move to the start of the replay buffer (f we have one yet)
-        if state.replay_buffer:
-            old_x_pos, old_y_pos, _ = state.replay_buffer.popleft()
-        else:
-            print('returning to last point: time=%f, x_pos=%f, y_pos=%f' % (state.time, old_x_pos, old_y_pos))
-        self.moveLateral(old_x_pos, old_y_pos, state, wave_file, rapid=True, record=False)
-        while True:
-            try:
-                x, y, z = state.replay_buffer.popleft()
-            except IndexError:
-                break
-            self.addAudioFrame(x, y, z, state, wave_file, record=False)
-            step_time = (1.0/float(self.parameters.WaveSamplingRate))
-            state.time += step_time
-        if DEBUG:
-            print('end new layer: time=%f, z_pos=%f' % (state.time, state.z_pos))
 
-    def moveLateral(self, x_pos, y_pos, state, wave_file, rapid=False, record=True):
+    def moveLateral(self, x_pos, y_pos, state, wave_file, rapid=False):
         """Handles the actual controlled movement to an x,y position."""
         if DEBUG:
             print('start move: time=%f, start_x_pos=%f, start_y_pos=%f, end_x_pos=%f, end_y_pos=%f, rapid=%s' % (state.time, state.x_pos, state.y_pos, x_pos, y_pos, rapid))
@@ -275,22 +224,23 @@ class GcodeConverter:
             return
         cosine_x = delta_x / distance
         cosine_y = delta_y / distance
-        time_step = self.parameters.TestTimeScale / 60.0 / float(self.parameters.WaveSamplingRate)
+        time_step = 1.0 / float(WAVE_SAMPLING_RATE)  # in seconds
         if DEBUG:
             print('delta_x=%f, delta_y=%f, distance=%f, cosine_x=%f, cosine_y=%f' % (
                 (delta_x, delta_y, distance, cosine_x, cosine_y)))
         # 2. For each sample of the wave, calculate the position advanced to at the current feed rate
         while delta_x != 0.0 or delta_y != 0.0:
             if rapid:
+                #:TODO: Disable laser during rapid
                 # Move as fast as possible while remaining coordinated
                 # Determine max feed rate based on max axis velocities for this trajectory
                 if cosine_y == 0.0:
-                    max_feed = self.parameters.XAxisMaxVel
+                    max_feed = self.tuning_collection.velocity_x_max
                 elif cosine_x == 0.0:
-                    max_feed = self.parameters.YAxisMaxVel
+                    max_feed = self.tuning_collection.velocity_y_max
                 else:
-                    max_feed_from_x = self.parameters.XAxisMaxVel / abs(cosine_x)
-                    max_feed_from_y = self.parameters.YAxisMaxVel / abs(cosine_y)
+                    max_feed_from_x = self.tuning_collection.velocity_x_max / abs(cosine_x)
+                    max_feed_from_y = self.tuning_collection.velocity_y_max / abs(cosine_y)
                     max_feed = min(max_feed_from_x, max_feed_from_y)
                 feed_per_sample = max_feed*time_step
                 max_step_x = feed_per_sample * abs(cosine_x)
@@ -319,7 +269,7 @@ class GcodeConverter:
             if DEBUG:
                 print('time=%f, x_pos=%1.5f, y_pos=%1.5f, x_vel=%4.3f, y_vel=%4.3f' % (
                     state.time, state.x_pos, state.y_pos, state.x_vel, state.y_vel))
-            self.addAudioFrame(state.x_pos, state.y_pos, state.z_pos, state, wave_file, record=record)
+            self.addAudioFrame(state.x_pos, state.y_pos, state.z_pos, state, wave_file)
             delta_x -= sample_delta_x
             delta_y -= sample_delta_y
             if abs(delta_x) < MIN_STEP:
@@ -334,9 +284,7 @@ class GcodeConverter:
         if DEBUG:
             print('end move: time=%f, x_pos=%f, y_pos=%f' % (state.time, state.x_pos, state.y_pos))
             
-    def addAudioFrame(self, x, y, z, state, wave_file, record=True):
-        if record:
-            state.replay_buffer.append((x, y, z))
+    def addAudioFrame(self, x, y, z, state, wave_file):
         values = self.transformer.transform_points([(x, y, z),])
         values = clip_values(values)
         frames = convert_values_to_frames(values)
@@ -372,10 +320,13 @@ class GcodeConverter:
         state.extruder_on = False
 
 
-if len(sys.argv) != 4:
-    print("Usage: %s <input.gcode> <output.wav> <output.cue>" % sys.argv[0])
+if len(sys.argv) != 5:
+    print("Usage: %s <tuning.dat> <input.gcode> <output.wav> <output.cue>" % sys.argv[0])
     sys.exit(1)
 
-parser = GcodeConverter(PrinterParameters())
-print("Converting G-code file '%s' into wave file '%s' and cue file '%s'" % (sys.argv[1], sys.argv[2], sys.argv[3]))
-parser.convertGcode(sys.argv[1], sys.argv[2], sys.argv[3])
+print("Converting G-code file '%s' into wave file '%s' and cue file '%s', using tuning data file '%s'" % (sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[1]))
+
+tuning_file_handler = TuningParameterFileHandler()
+tuning_collection = tuning_file_handler.read_from_file(sys.argv[1])
+parser = GcodeConverter(tuning_collection)
+parser.convertGcode(sys.argv[2], sys.argv[3], sys.argv[4])
