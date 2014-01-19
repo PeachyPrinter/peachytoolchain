@@ -23,14 +23,12 @@ particular printer. Please adjust these in the PrinterParameters class below.
 import math
 import sys
 import wave
-from collections import deque
 import cue_file
 from audio.transform import PositionToAudioTransformer
 from audio.tuning_parameter_file import TuningParameterFileHandler
 from audio.util import convert_values_to_frames, clip_values
 
-
-WAVE_SAMPLING_RATE = 8000
+WAVE_SAMPLING_RATE = 44100
 MIN_STEP = 0.001*100.0 # Minimum possible step in millimetres. Used as a stopping condition.
 DEBUG = False # Set to True for debugging messages
 
@@ -39,8 +37,6 @@ class MachineState:
     x_pos = 0.0         # Current x and y position (in millimetres)
     y_pos = 0.0
     z_pos = 0.0         # z is special, since we have to wait for it, rather than control it
-    x_vel = 0.0         # Current x and y velocity (in millimetres per second)
-    y_vel = 0.0
     time = 0.0          # In seconds
     frame_num = 0       # Number of frames in the wav file. Tracked here because wave_write objects can't say.
     extruder_pwm = 1.0  # The PWM fraction that the G-code was telling the printer to use. Since our printer
@@ -224,72 +220,40 @@ class GcodeConverter:
             return
         cosine_x = delta_x / distance
         cosine_y = delta_y / distance
-        time_step = 1.0 / float(WAVE_SAMPLING_RATE)  # in seconds
         if DEBUG:
             print('delta_x=%f, delta_y=%f, distance=%f, cosine_x=%f, cosine_y=%f' % (
                 (delta_x, delta_y, distance, cosine_x, cosine_y)))
-        # 2. For each sample of the wave, calculate the position advanced to at the current feed rate
-        while delta_x != 0.0 or delta_y != 0.0:
-            if rapid:
-                #:TODO: Disable laser during rapid
-                # Move as fast as possible while remaining coordinated
-                # Determine max feed rate based on max axis velocities for this trajectory
-                if cosine_y == 0.0:
-                    max_feed = self.tuning_collection.velocity_x_max
-                elif cosine_x == 0.0:
-                    max_feed = self.tuning_collection.velocity_y_max
-                else:
-                    max_feed_from_x = self.tuning_collection.velocity_x_max / abs(cosine_x)
-                    max_feed_from_y = self.tuning_collection.velocity_y_max / abs(cosine_y)
-                    max_feed = min(max_feed_from_x, max_feed_from_y)
-                feed_per_sample = max_feed*time_step
-                max_step_x = feed_per_sample * abs(cosine_x)
-                max_step_y = feed_per_sample * abs(cosine_y)
+        if rapid:
+            #:TODO: Disable laser during rapid
+            # Move as fast as possible while remaining coordinated
+            # Determine max feed rate based on max axis velocities for this trajectory
+            if cosine_y == 0.0:
+                max_feed = self.tuning_collection.velocity_x_max
+            elif cosine_x == 0.0:
+                max_feed = self.tuning_collection.velocity_y_max
             else:
-                # Use a constant speed with no acceleration and always move at requested feed rate
-                assert state.extruder_pwm != 0.0, "If extruder_pwm=0, should rapid instead"
-                feed_per_sample = (state.feed_rate/state.extruder_pwm)*time_step
-                max_step_x = feed_per_sample * abs(cosine_x)
-                max_step_y = feed_per_sample * abs(cosine_y)
-            if abs(delta_x) > max_step_x:
-                sample_delta_x = math.copysign(max_step_x, delta_x)
-            else:
-                sample_delta_x = delta_x
-            if abs(delta_y) > max_step_y:
-                sample_delta_y = math.copysign(max_step_y, delta_y)
-            else:
-                sample_delta_y = delta_y
-            if DEBUG:
-                print('sample_delta_x=%f, sample_delta_y=%f' % (sample_delta_x, sample_delta_y)) 
-            state.x_pos += sample_delta_x
-            state.y_pos += sample_delta_y
-            state.time += time_step
-            state.x_vel = sample_delta_x / time_step
-            state.y_vel = sample_delta_y / time_step
-            if DEBUG:
-                print('time=%f, x_pos=%1.5f, y_pos=%1.5f, x_vel=%4.3f, y_vel=%4.3f' % (
-                    state.time, state.x_pos, state.y_pos, state.x_vel, state.y_vel))
-            self.addAudioFrame(state.x_pos, state.y_pos, state.z_pos, state, wave_file)
-            delta_x -= sample_delta_x
-            delta_y -= sample_delta_y
-            if abs(delta_x) < MIN_STEP:
-                delta_x = 0.0
-            if abs(delta_y) < MIN_STEP:
-                delta_y = 0.0
-        # Always perform one sample while not moving so that velocity actually ends at zero.
-        self.addAudioFrame(state.x_pos, state.y_pos, state.z_pos, state, wave_file)
-        state.time += time_step
-        state.x_vel = 0.0
-        state.y_vel = 0.0
-        if DEBUG:
-            print('end move: time=%f, x_pos=%f, y_pos=%f' % (state.time, state.x_pos, state.y_pos))
-            
-    def addAudioFrame(self, x, y, z, state, wave_file):
-        values = self.transformer.transform_points([(x, y, z),])
+                max_feed_from_x = self.tuning_collection.velocity_x_max / abs(cosine_x)
+                max_feed_from_y = self.tuning_collection.velocity_y_max / abs(cosine_y)
+                max_feed = min(max_feed_from_x, max_feed_from_y)
+            feed_rate = max_feed
+        else:
+            # Use a constant speed with no acceleration and always move at requested feed rate
+            assert state.extruder_pwm != 0.0, "If extruder_pwm=0, should rapid instead"
+            feed_rate = state.feed_rate / state.extruder_pwm
+        # To ensure exact distance is covered, create each sample by multiplying by the portion of the move made
+        num_samples = int(math.ceil(distance * WAVE_SAMPLING_RATE / feed_rate))
+        samples = [(state.x_pos+delta_x*(i/num_samples), state.y_pos+delta_y*(i/num_samples), state.z_pos) for i in range(0, num_samples+1)]
+        self.saveSamples(samples, state, wave_file)
+        state.x_pos = state.x_pos+delta_x
+        state.y_pos = state.y_pos+delta_y
+        state.time += (len(samples) / WAVE_SAMPLING_RATE)
+
+    def saveSamples(self, samples, state, wave_file):
+        values = self.transformer.transform_points(samples)
         values = clip_values(values)
         frames = convert_values_to_frames(values)
         wave_file.writeframesraw(frames)
-        state.frame_num += 1
+        state.frame_num += len(samples)
 
     def mCommandSetExtruderPWM(self, params, state, wave_file, cue_file):
         pwm_rate = None
