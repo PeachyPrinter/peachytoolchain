@@ -21,12 +21,20 @@ class TuningParameterCollection(object):
 
     def __init__(self):
         self.tuning_parameters = [TuningParameters(),]
+        self._cached_tuning_parameters = None
+        self._cached_height = None
 
     def get_tuning_parameters_for_height(self, height):
-        # Edge cases
+        # Caching
+        if self._cached_height == height:
+            return self._cached_tuning_parameters
         new_tp = TuningParameters()
+        self._cached_tuning_parameters = new_tp
+        self._cached_height = height
+        # Edge cases
         if not self.tuning_parameters:
             return new_tp
+        # Calculate new TuningParameters for given height
         tps = sorted(self.tuning_parameters, key=lambda tp: tp.height)
         lower_tp = None
         higher_tp = None
@@ -74,6 +82,8 @@ class TuningParameterCollection(object):
             my_tp = TuningParameters()
             my_tp.update(other_tp)
             self.tuning_parameters.append(my_tp)
+            self._cached_height = None
+            self._cached_tuning_parameters = None
 
 
 class TuningParameters(object):
