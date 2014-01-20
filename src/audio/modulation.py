@@ -1,4 +1,4 @@
-import math
+import numpy
 
 class ModulationTypes:
     DC = 'dc'
@@ -51,29 +51,32 @@ class AmplitudeModulator(Modulator):
 
     def _update_modulation(self):
         # Use a fixed set of values for modulation to speed up modulation and ensure consistency.
+        # Note: Since this fixes the period to an integer number of samples, the frequency will be discretized.
         if self._laser_enabled:
             self._carrier_freq = float(self.AM_CARRIER_FREQ_LASER_ON)
         else:
             self._carrier_freq = float(self.AM_CARRIER_FREQ_LASER_OFF)
         cycle_period = int(round(float(self.NUM_CYCLES_TO_CALCULATE) * self.sampling_rate / self._carrier_freq))
-        self._modulation_waveform = [math.cos(2.0*math.pi*(
-                float(cycle) * float(self._carrier_freq) / float(self._sampling_rate)
-            )) for cycle in range(cycle_period)]
+        self._modulation_waveform = numpy.cos(numpy.linspace(0.0, self.NUM_CYCLES_TO_CALCULATE*2.0*numpy.pi,
+                                                             num=cycle_period, endpoint=False))
         self._current_cycle = 0
 
     def modulate_values(self, values):
-        new_values = []
-        for (left, right) in values:
-            # Shift from -/+ 1.0 to (0, 1.0)
-            left = (left + 1.0) / 2.0
-            right = (right + 1.0) / 2.0
-            # Then shift to the min/max
-            left = self.AM_MINIMUM_AMPLITUDE + left * (self.AM_MAXIMUM_AMPLITUDE-self.AM_MINIMUM_AMPLITUDE)
-            right = self.AM_MINIMUM_AMPLITUDE + right * (self.AM_MAXIMUM_AMPLITUDE-self.AM_MINIMUM_AMPLITUDE)
-            left *= self._modulation_waveform[self._current_cycle]
-            right *= self._modulation_waveform[self._current_cycle]
-            new_values.append((left, right))
-            self._current_cycle = (self._current_cycle + 1) % len(self._modulation_waveform)
+        num_values = values.shape[0]
+        waveform_indices = numpy.remainder(numpy.arange(num_values)+self._current_cycle, self._modulation_waveform.shape[0])
+        modulation_waveform = numpy.take(self._modulation_waveform, waveform_indices)
+        left = values[:,0]
+        right = values[:,1]
+        # Shift from -/+ 1.0 to (0, 1.0)
+        left = (left + 1.0) / 2.0
+        right = (right + 1.0) / 2.0
+        # Then shift to the min/max
+        left = self.AM_MINIMUM_AMPLITUDE + left * (self.AM_MAXIMUM_AMPLITUDE-self.AM_MINIMUM_AMPLITUDE)
+        right = self.AM_MINIMUM_AMPLITUDE + right * (self.AM_MAXIMUM_AMPLITUDE-self.AM_MINIMUM_AMPLITUDE)
+        left = left * modulation_waveform
+        right = right * modulation_waveform
+        self._current_cycle = (self._current_cycle + num_values) % self._modulation_waveform.shape[0]
+        new_values = numpy.column_stack((left, right))
         return new_values
 
     @property
@@ -100,6 +103,7 @@ class DirectConnectionModulator(Modulator):
     DC_SIDE_TONE_FREQ = 11025.0
     DC_SIDE_TONE_AMPLITUDE = 0.25
     DC_AUDIO_SCALE = 0.75
+    NUM_CYCLES_TO_CALCULATE = 128
 
     def __init__(self, sampling_rate):
         self._sampling_rate = sampling_rate
@@ -109,24 +113,24 @@ class DirectConnectionModulator(Modulator):
         self._update_waveform()
 
     def _update_waveform(self):
-        # Use a fixed set of values for the waveform to speed up modulation and ensure consistency.
-        cycle_period = int(round(self.sampling_rate / self.DC_SIDE_TONE_FREQ))
-        self._side_tone_waveform = [math.cos(2.0*math.pi*(
-                float(cycle) * float(self.DC_SIDE_TONE_FREQ) / float(self._sampling_rate)
-            )) for cycle in range(cycle_period)]
-
+        # Use a fixed set of values for modulation to speed up modulation and ensure consistency.
+        # Note: Since this fixes the period to an integer number of samples, the frequency will be discretized.
+        cycle_period = int(round(float(self.NUM_CYCLES_TO_CALCULATE) * self.sampling_rate / self.DC_SIDE_TONE_FREQ))
+        self._side_tone_waveform = numpy.cos(numpy.linspace(0.0, self.NUM_CYCLES_TO_CALCULATE*2.0*numpy.pi,
+                                                            num=cycle_period, endpoint=False))
         self._current_cycle = 0
 
     def modulate_values(self, values):
-        new_values = []
-        for (left, right) in values:
-            left *= self.DC_AUDIO_SCALE
-            right *= self.DC_AUDIO_SCALE
-            if self._laser_enabled:
-                left += self.DC_SIDE_TONE_AMPLITUDE*self._side_tone_waveform[self._current_cycle]
-                right += self.DC_SIDE_TONE_AMPLITUDE*self._side_tone_waveform[self._current_cycle]
-            new_values.append((left, right))
-            self._current_cycle = (self._current_cycle + 1) % len(self._side_tone_waveform)
+        num_values = values.shape[0]
+        waveform_indices = numpy.remainder(numpy.arange(num_values)+self._current_cycle, self._side_tone_waveform.shape[0])
+        modulation_waveform = numpy.take(self._side_tone_waveform, waveform_indices)
+        left = values[:,0] * self.DC_AUDIO_SCALE
+        right = values[:,1] * self.DC_AUDIO_SCALE
+        if self._laser_enabled:
+            left = left + modulation_waveform * self.DC_SIDE_TONE_AMPLITUDE
+            right = right + modulation_waveform * self.DC_SIDE_TONE_AMPLITUDE
+        self._current_cycle = (self._current_cycle + num_values) % self._side_tone_waveform.shape[0]
+        new_values = numpy.column_stack((left, right))
         return new_values
 
     @property

@@ -26,6 +26,7 @@ class AudioServer(threading.Thread):
             num_next = self.stream.get_write_available()
             if num_next > int(self.sampling_rate/16):
                 values = self.generator.nextN(num_next)
+                values = audio_util.clip_values(values)
                 frames = audio_util.convert_values_to_frames(values)
                 self.stream.write(frames)
             else:
