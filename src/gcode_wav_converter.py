@@ -24,6 +24,7 @@ import math
 import sys
 import wave
 import cue_file
+import numpy
 from audio.transform import PositionToAudioTransformer
 from audio.tuning_parameter_file import TuningParameterFileHandler
 from audio.util import convert_values_to_frames, clip_values
@@ -69,7 +70,7 @@ class GcodeConverter:
         gcode_data = self.loadGcode(gcode_filename)
         state = MachineState()
         num_lines = len(gcode_data)
-        lines_per_notify = int(num_lines / 100.0)
+        lines_per_notify = int(max(num_lines / 100.0, 1.0))
         for cur_line_num, line in enumerate(gcode_data):
             if DEBUG:
                 print(line)
@@ -242,7 +243,10 @@ class GcodeConverter:
             feed_rate = state.feed_rate / state.extruder_pwm
         # To ensure exact distance is covered, create each sample by multiplying by the portion of the move made
         num_samples = int(math.ceil(distance * WAVE_SAMPLING_RATE / feed_rate))
-        samples = [(state.x_pos+delta_x*(i/num_samples), state.y_pos+delta_y*(i/num_samples), state.z_pos) for i in range(0, num_samples+1)]
+        x_array = numpy.linspace(state.x_pos, state.x_pos+delta_x, num=num_samples)
+        y_array = numpy.linspace(state.y_pos, state.y_pos+delta_y, num=num_samples)
+        z_array = numpy.ones((num_samples,))*state.z_pos
+        samples = numpy.column_stack((x_array, y_array, z_array))
         self.saveSamples(samples, state, wave_file)
         state.x_pos = state.x_pos+delta_x
         state.y_pos = state.y_pos+delta_y
