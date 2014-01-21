@@ -53,6 +53,9 @@ class PositionToAudioTransformer(object):
             shear_matrix = numpy.array([[1, tp.x_shear],
                                         [tp.y_shear, 1]]).T
             audio[start_i:end_i,:] = numpy.dot(audio[start_i:end_i,:], shear_matrix)
-            #:TODO: Add trapezoid. It's not an affine transformation, so requires a 3x3 homogeneous matrix solution.
+            # There's probably a better way to do trapezoid, but I'm not familiar with it
+            mult = audio[start_i:end_i,0] * audio[start_i:end_i,1]
+            audio[start_i:end_i,0] += mult * tp.x_trapezoid
+            audio[start_i:end_i,1] += mult * tp.y_trapezoid
         return audio
 
