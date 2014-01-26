@@ -42,9 +42,6 @@ class MachineState:
     y_pos = 0.0
     z_pos = 0.0         # z is special, since we have to wait for it, rather than control it
     time = 0.0          # In seconds
-    extruder_pwm = 1.0  # The PWM fraction that the G-code was telling the printer to use. Since our printer
-                        # can't adjust extrusion rate, we will have to scale the feed rate instead.
-    extruder_on = False # We need to rapid during a movement with extrusion off, since we can't turn off the laser.
     feed_rate = None    # The last requested feed rate in millimetres/minute. Saved in case a G-code doesn't specify it.
     # The below are used to write the CUE file
     current_frame_num = 0   # Number of frames in the wav file. Tracked here because wave_write objects can't say.
@@ -55,8 +52,6 @@ class MachineState:
     layer_start_x_pos = 0.0     # x and y position (in millimetres) at beginning of current layer
     layer_start_y_pos = 0.0
     layer_start_feed_rate = 0.0
-    layer_start_extruder_on = False
-    layer_start_extruder_pwm = 1.0
     layer_start_line_num = 0 # Line number where current layer started
     drawing_sublayer = False    # True while we are looping to draw a sublayer
 
@@ -69,9 +64,6 @@ class GcodeConverter:
                     'G21': 'gCommandUseMillimetres',
                     'G28': 'gCommandMoveToOrigin',
                     'G90': 'gCommandUseAbsolutePositioning',
-                    'M101': 'mCommandTurnExtruderOn',
-                    'M103': 'mCommandTurnExtruderOff',
-                    'M113': 'mCommandSetExtruderPWM',
                    }
 
     def __init__(self, tuning_collection):
@@ -125,14 +117,8 @@ class GcodeConverter:
         return gcode_data
 
     def createInitialMachineState(self):
-        """Create the MachineState, ensuring the initial conditions are reasonable."""
-        state = MachineState()
-        x_center = (self.tuning_collection.build_x_max + self.tuning_collection.build_x_min) / 2.0
-        y_center = (self.tuning_collection.build_y_max + self.tuning_collection.build_y_min) / 2.0
-        state.x_pos = state.layer_start_x_pos = x_center
-        state.y_pos = state.layer_start_y_pos = y_center
-        return state
-    
+        return MachineState()
+
     def processGcodeInstruction(self, gcode_instruction, wave_file, cue_file, state):
         """Handles a single gcode_instruction, based on the current state, appending data to the
         wave_file as appropriate. The state will be updated to reflect the results after applying
@@ -174,6 +160,7 @@ class GcodeConverter:
         y_pos = None
         z_pos = None
         feed_rate = None
+        extrude = False
         for param in params:
             if param.startswith('X'):
                 x_pos = float(param[1:])
@@ -184,15 +171,15 @@ class GcodeConverter:
             elif param.startswith('F'):
                 feed_rate = float(param[1:]) / 60.0
             elif param.startswith('E'):
-                # The length of extrudate -- ignore
-                pass
+                # The length of extrudate
+                # HACK: We can't control amount of extrudate, but we use this to determine if extruding was
+                # requested.
+                extrude = True
             else:
                 print("WARNING: Move command received unrecognized parameter '%s'; ignoring" % param)
         
-        # Save specified feed rate or use the previous one if not specified
-        if feed_rate is None:
-            feed_rate = state.feed_rate
-        else:
+        # Update feed rate if given
+        if feed_rate is not None:
             # Check for validity of feed rate
             if feed_rate > self.tuning_collection.velocity_x_max:
                 print("WARNING: Requested feed rate %f mm/second exceeds maximum machine X axis velocity of %f mm/second. "
@@ -202,18 +189,6 @@ class GcodeConverter:
                 print("WARNING: Requested feed rate %f mm/second exceeds maximum machine Y axis velocity of %f mm/second. "
                       "Clipping to maximum." % (feed_rate, self.tuning_collection.velocity_y_max))
                 feed_rate = self.tuning_collection.velocity_y_max
-            if feed_rate / state.extruder_pwm > self.tuning_collection.velocity_x_max:
-                print("WARNING: Effective feed rate %f mm/second (based on requested feed rate %f mm/second "
-                      "and extruder PWM duty cycle %.1f%%) exceeds maximum machine machine X axis velocity of %f mm/second. "
-                      "Clipping to maximum." % (feed_rate / state.extruder_pwm, feed_rate, state.extruder_pwm*100.0,
-                          self.tuning_collection.velocity_x_max))
-                feed_rate = self.tuning_collection.velocity_x_max * state.extruder_pwm
-            if feed_rate / state.extruder_pwm > self.tuning_collection.velocity_y_max:
-                print("WARNING: Effective feed rate %f mm/second (based on requested feed rate %f mm/second "
-                      "and extruder PWM duty cycle %.1f%%) exceeds maximum machine machine Y axis velocity of %f mm/second. "
-                      "Clipping to maximum." % (feed_rate / state.extruder_pwm, feed_rate, state.extruder_pwm*100.0,
-                          self.tuning_collection.velocity_y_max))
-                feed_rate = self.tuning_collection.velocity_y_max * state.extruder_pwm
             state.feed_rate = feed_rate
 
         # 2. Determine what movement is being requested
@@ -227,7 +202,7 @@ class GcodeConverter:
                 raise ValueError("Requested y position '%f' greater than machine maximum '%f'" % (y_pos, self.tuning_collection.build_y_max)) 
             if y_pos < self.tuning_collection.build_y_min:
                 raise ValueError("Requested y position '%f' less than machine minimum '%f'" % (y_pos, self.tuning_collection.build_y_min))
-            self.moveLateral(x_pos, y_pos, state, wave_file, rapid=False)
+            self.moveLateral(x_pos, y_pos, state, wave_file, extrude, rapid=False)
         if z_pos is not None and z_pos != state.z_pos:
             if x_pos is not None or y_pos is not None:
                 print('WARNING: Simultaneous lateral and vertical movements are not supported. Movements will be separated.')
@@ -257,11 +232,9 @@ class GcodeConverter:
         # Save state before move so we can restore afterwards
         layer_end_x_pos = state.x_pos
         layer_end_y_pos = state.y_pos
-        layer_end_extruder_on = state.extruder_on
 
         # Move to dwell position
-        state.extruder_on = False
-        self.moveLateral(self.tuning_collection.dwell_x, self.tuning_collection.dwell_y, state, wave_file, rapid=True)
+        self.moveLateral(self.tuning_collection.dwell_x, self.tuning_collection.dwell_y, state, wave_file, False, rapid=True)
 
         # Write the cue for the previous layer.
         cue_file.write_cue(cue_file_mod.PlayCue(state.current_cue_start_frame_num, state.current_frame_num))
@@ -271,7 +244,7 @@ class GcodeConverter:
         num_samples = self.modulator.waveform_period
         samples = numpy.ones((num_samples, 3))
         samples *= numpy.array([state.x_pos, state.y_pos, state.z_pos])
-        self.saveSamples(samples, state, wave_file)
+        self.saveSamples(samples, state, wave_file, False)
         current_sublayer += 1
         state.z_pos = sublayer_height * current_sublayer
         cue_file.write_cue(cue_file_mod.LoopUntilHeightCue(
@@ -286,10 +259,8 @@ z_pos=%f, current_sublayer=%d, end_sublayer=%d, layer_start_line_num=%d''' % (
                     state.z_pos, current_sublayer, end_sublayer, state.layer_start_line_num
                 ))
             state.drawing_sublayer = True
-            self.moveLateral(state.layer_start_x_pos, state.layer_start_y_pos, state, wave_file, rapid=True)
+            self.moveLateral(state.layer_start_x_pos, state.layer_start_y_pos, state, wave_file, False, rapid=True)
             # Reset state to same as start of layer
-            state.extruder_pwm = state.layer_start_extruder_pwm
-            state.extruder_on = state.layer_start_extruder_on
             state.feed_rate = state.layer_start_feed_rate
             state.current_line_num = state.layer_start_line_num - 1  # This will be incremented before starting next instruction
         else:
@@ -299,20 +270,18 @@ z_pos=%f, current_sublayer=%d, end_sublayer=%d, layer_start_line_num=%d''' % (
                 ))
             state.drawing_sublayer = False
             # Return to end of the current layer
-            self.moveLateral(layer_end_x_pos, layer_end_y_pos, state, wave_file, rapid=True)
-            state.extruder_on = layer_end_extruder_on
+            self.moveLateral(layer_end_x_pos, layer_end_y_pos, state, wave_file, False, rapid=True)
             # Save state at start of this layer
             state.layer_start_line_num = state.current_line_num + 1 # New layer starts after the vertical movement
             state.layer_start_x_pos = state.x_pos
             state.layer_start_y_pos = state.y_pos
             state.layer_start_feed_rate = state.feed_rate
-            state.layer_start_extruder_on = state.extruder_on
-            state.layer_start_extruder_pwm = state.layer_start_extruder_pwm
 
-    def moveLateral(self, x_pos, y_pos, state, wave_file, rapid=False):
+    def moveLateral(self, x_pos, y_pos, state, wave_file, extrude, rapid=False):
         """Handles the actual controlled movement to an x,y position."""
         if DEBUG:
-            print('start move: time=%f, start_x_pos=%f, start_y_pos=%f, end_x_pos=%f, end_y_pos=%f, rapid=%s' % (state.time, state.x_pos, state.y_pos, x_pos, y_pos, rapid))
+            print('start move: time=%f, start_x_pos=%f, start_y_pos=%f, end_x_pos=%f, end_y_pos=%f, extrude=%s, rapid=%s' % (
+                state.time, state.x_pos, state.y_pos, x_pos, y_pos, extrude, rapid))
         delta_x = x_pos - state.x_pos
         delta_y = y_pos - state.y_pos
         distance = math.sqrt(math.pow(delta_x, 2.0) + math.pow(delta_y, 2.0))
@@ -325,10 +294,8 @@ z_pos=%f, current_sublayer=%d, end_sublayer=%d, layer_start_line_num=%d''' % (
         if DEBUG:
             print('delta_x=%f, delta_y=%f, distance=%f, cosine_x=%f, cosine_y=%f' % (
                 (delta_x, delta_y, distance, cosine_x, cosine_y)))
-        previous_extruder_on = state.extruder_on
         if rapid:
-            # Disable extrusion while rapiding
-            state.extruder_on = False
+            assert not extrude, "Extrude and rapid should be mutually exclusive!"
             # Move as fast as possible while remaining coordinated
             # Determine max feed rate based on max axis velocities for this trajectory
             if cosine_y == 0.0:
@@ -342,59 +309,37 @@ z_pos=%f, current_sublayer=%d, end_sublayer=%d, layer_start_line_num=%d''' % (
             feed_rate = max_feed
         else:
             # Use a constant speed with no acceleration and always move at requested feed rate
-            assert state.extruder_pwm != 0.0, "If extruder_pwm=0, should rapid instead"
-            feed_rate = state.feed_rate / state.extruder_pwm
-            # To ensure exact distance is covered, create each sample by multiplying by the portion of the move made
+            feed_rate = state.feed_rate
+        # To ensure exact distance is covered, create each sample by multiplying by the portion of the move made
         num_samples = int(math.ceil(distance * WAVE_SAMPLING_RATE / feed_rate))
         x_array = numpy.linspace(state.x_pos, state.x_pos+delta_x, num=num_samples)
         y_array = numpy.linspace(state.y_pos, state.y_pos+delta_y, num=num_samples)
         z_array = numpy.ones((num_samples,))*state.z_pos
         samples = numpy.column_stack((x_array, y_array, z_array))
-        self.saveSamples(samples, state, wave_file)
+        self.saveSamples(samples, state, wave_file, extrude)
         state.x_pos = state.x_pos+delta_x
         state.y_pos = state.y_pos+delta_y
         state.time += (len(samples) / WAVE_SAMPLING_RATE)
-        # Restore extuder state
-        state.extruder_on = previous_extruder_on
 
-    def saveSamples(self, samples, state, wave_file):
+    def saveSamples(self, samples, state, wave_file, laser_enable):
         values = self.transformer.transform_points(samples)
         values = clip_values(values)
-        if state.extruder_on != self.modulator.laser_enabled:
-            self.modulator.laser_enabled = state.extruder_on
+        # Only change laser enable if needed because it resets modulator
+        if laser_enable != self.modulator.laser_enabled:
+            self.modulator.laser_enabled = laser_enable
         values = self.modulator.modulate_values(values)
         frames = convert_values_to_frames(values)
         wave_file.writeframesraw(frames)
         state.current_frame_num += len(samples)
 
-    def mCommandSetExtruderPWM(self, params, state, wave_file, cue_file):
-        pwm_rate = None
-        for param in params:
-            if param.startswith('S'):
-                try:
-                    rate = float(param[1:])
-                except ValueError:
-                    raise ValueError("Command received malformed parameter '%s'; expected a float" % param)
-                pwm_rate = rate
-            else:
-                print("WARNING: SetExtruderPWM received unrecognized parameter '%s'" % param)
-        if pwm_rate is not None:
-            state.extruder_pwm = pwm_rate
-    
     def gCommandUseAbsolutePositioning(self, params, state, wave_file, cue_file):
         # This is currently the only allowed value, so nothing needs to be done
         return
     
     def gCommandMoveToOrigin(self, params, state, wave_file, cue_file):
         # Move quickly to origin
-        self.moveLateral(0.0, 0.0, state, wave_file, rapid=True)
+        self.moveLateral(0.0, 0.0, state, wave_file, False, rapid=True)
         
-    def mCommandTurnExtruderOn(self, params, state, wave_file, cue_file):
-        state.extruder_on = True
-    
-    def mCommandTurnExtruderOff(self, params, state, wave_file, cue_file):
-        state.extruder_on = False
-
 
 if len(sys.argv) != 5:
     print("Usage: %s <tuning.dat> <input.gcode> <output.wav> <output.cue>" % sys.argv[0])
