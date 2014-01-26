@@ -15,18 +15,42 @@ def getModulator(modulation_type, sampling_rate):
 
 
 class Modulator(object):
+    """Base class for an object that's responsible for taking left/right audio values and modulating them as needed
+    to drive the printer. Also has to consider whether or not the laser is enabled, since this changes how modulation
+    is performed (to signal to the printer the laser state)."""
     def __init__(self, sampling_rate):
+        """
+        sampling_rate -- int -- The sampling frequency of the expected audio input/output stream.
+        """
         raise NotImplementedError('abstract')
 
     def modulate_values(self, values):
+        """
+        Modulates the given values according to the modulation technique used.
+        Takes and returns a Nx2 numpy array of left/right +/-1.0 audio values.
+        """
         raise NotImplementedError('abstract')
 
     @property
     def sampling_rate(self):
+        """
+        The current sampling rate of the audio stream.
+        """
         raise NotImplementedError('abstract')
 
     @property
     def laser_enabled(self):
+        """
+        Whether or not the laser is currently enabled. Set this to change the laser state.
+        """
+        raise NotImplementedError('abstract')
+
+    @property
+    def waveform_period(self):
+        """
+        The period of the modulation waveform. The modulator ensures that looping over this period will result in a
+        continuous waveform with no sudden jumps.
+        """
         raise NotImplementedError('abstract')
 
 
@@ -95,6 +119,10 @@ class AmplitudeModulator(Modulator):
         self._laser_enabled = enabled
         self._update_modulation()
 
+    @property
+    def waveform_period(self):
+        return self._modulation_waveform.shape[0]
+
 
 class DirectConnectionModulator(Modulator):
     """Takes a stream of stereo audio values and plays them mostly as-is, except that it scales them to 75% of total
@@ -147,3 +175,7 @@ class DirectConnectionModulator(Modulator):
     @laser_enabled.setter
     def laser_enabled(self, enabled):
         self._laser_enabled = enabled
+
+    @property
+    def waveform_period(self):
+        return self._side_tone_waveform.shape[0]
