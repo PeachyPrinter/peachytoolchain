@@ -6,4 +6,4 @@ EXEC_DIR=$(cd "$(dirname "$0")" && pwd)
 EXEC_NAME=drip_test.py
 SRC_DIR="$EXEC_DIR/src"
 
-PYTHONPATH="$SRC_DIR" exec "$SRC_DIR/$EXEC_NAME"
+PYTHONPATH="$SRC_DIR" exec "$SRC_DIR/$EXEC_NAME" "$@"
