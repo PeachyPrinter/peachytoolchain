@@ -57,7 +57,7 @@ class CueFileReader(object):
         """Returns a list of Cue objects correspending to the CUEs within the file"""
         self.infile.seek(0)
         self._read_headers()
-        return [cue for cue in self._get_next_cue_generator]
+        return [cue for cue in self._get_next_cue_generator()]
 
     def _read_headers(self):
         # First line is CUE_FILE identifier
@@ -119,24 +119,24 @@ class CueFileReader(object):
 
     def _parse_play_cue(self, match):
         try:
-            start_frame = int(match.group('start_frame'))
+            start_frame = int(match.group('start'))
         except ValueError:
-            raise ValueError('Syntax error: PLAY cue <start_frame> should be int; got "%s"' % (match.group('start_frame'),))
+            raise ValueError('Syntax error: PLAY cue <start_frame> should be int; got "%s"' % (match.group('start'),))
         try:
-            end_frame = int(match.group('end_frame'))
+            end_frame = int(match.group('end'))
         except ValueError:
-            raise ValueError('Syntax error: PLAY cue <end_frame> should be int; got "%s"' % (match.group('end_frame'),))
+            raise ValueError('Syntax error: PLAY cue <end_frame> should be int; got "%s"' % (match.group('end'),))
         return PlayCue(start_frame, end_frame)
 
     def _parse_loop_until_height_cue(self, match):
         try:
-            start_frame = int(match.group('start_frame'))
+            start_frame = int(match.group('start'))
         except ValueError:
-            raise ValueError('Syntax error: LOOP UNTIL HEIGHT cue <start_frame> should be int; got "%s"' % (match.group('start_frame'),))
+            raise ValueError('Syntax error: LOOP UNTIL HEIGHT cue <start_frame> should be int; got "%s"' % (match.group('start'),))
         try:
-            end_frame = int(match.group('end_frame'))
+            end_frame = int(match.group('end'))
         except ValueError:
-            raise ValueError('Syntax error: LOOP UNTIL HEIGHT cue <end_frame> should be int; got "%s"' % (match.group('end_frame'),))
+            raise ValueError('Syntax error: LOOP UNTIL HEIGHT cue <end_frame> should be int; got "%s"' % (match.group('end'),))
         try:
             until_height = float(match.group('height'))
         except ValueError:

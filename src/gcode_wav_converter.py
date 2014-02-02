@@ -330,6 +330,8 @@ z_pos=%f, current_sublayer=%d, end_sublayer=%d, layer_start_line_num=%d''' % (
         values = self.modulator.modulate_values(values)
         frames = convert_values_to_frames(values)
         wave_file.writeframesraw(frames)
+        if DEBUG:
+            print('Wrote %d frames (%d - %d) with laser_enable=%s' % (len(samples), state.current_frame_num, len(samples)+state.current_frame_num, laser_enable))
         state.current_frame_num += len(samples)
 
     def gCommandUseAbsolutePositioning(self, params, state, wave_file, cue_file):

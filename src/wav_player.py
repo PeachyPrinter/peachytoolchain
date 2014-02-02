@@ -1,22 +1,25 @@
-"""gcode-wav file player
-This program takes a wav file and its accompanying cue file (both converted to gcode from the gcode-to-wav converter)
-and plays back each layer at the appropriate time. Between layers it holds the last position from the end of the
-current layer. This relies on the gcode-to-wav converter leaving the laser at a safe spot at the layer break.
-
-NOTE: This version uses a time per layer instead of counting drips.
+#!/usr/bin/env python3
 """
-### Constants to edit while testing
-INPUT_WAVE_RATE = 8000
-DRIPS_PER_MILLIMETER = 170.0 # adjust this based on measurements of total drips and water level
-MILLIMETER_PER_LAYER = 0.1 # Resolution as defined in slicer
-MILLIMETER_PER_SUBLAYER = 0.01 # Resolution required to get proper adhesion -- this probably won't change
+Title: wav player
+Author: James Cooper <james@coopercs.ca>
+Copyright: Rylan Grayston
+License: GPLv2
+
+This program takes a wav file and its accompanying cue file (both converted from gcode with the gcode-to-wav converter)
+and plays back each layer.
+"""
+
+## Parameters for debugging
+USE_VIRTUAL_DRIP = False    # If True, mic input will be ignored and a constant drip rate will be assumed.
+VIRTUAL_DRIP_RATE = 1.0     # drips per second
+DEBUG = False               # If True, additional debugging information will be printed
+TRACE = False               # If True, all cue and frame count information will be printed (VERY NOISY)
+DEBUG_STREAM = False        # If True, will save all wave output to a file for review
 
 # Internal constants
-DRIPS_PER_LAYER = DRIPS_PER_MILLIMETER*MILLIMETER_PER_LAYER
-DRIPS_PER_SUBLAYER = DRIPS_PER_MILLIMETER*MILLIMETER_PER_SUBLAYER
+INPUT_WAVE_RATE = 8000
 
 import pyaudio
-import math
 import time
 try:
     import queue
@@ -25,15 +28,21 @@ except:
 import sys
 import wave
 
-from cue_file import CueFileReader
-from audio.drip_detector import DripDetector
-from audio.util import STEREO_WAVE_STRUCT, MAX_S16
+import cue_file as cue_file_mod
+from audio.drip_detector import DripDetector, VirtualDripDetector
+from audio.tuning_parameter_file import TuningParameterFileHandler
 
-if not len(sys.argv) == 3:
-    print("Usage: %s <wav_file> <cue_file>" % sys.argv[0])
+# Parse command line arguments
+if len(sys.argv) != 4:
+    print("Usage: %s <tuning.dat> <output.wav> <output.cue>" % sys.argv[0])
     sys.exit(1)
+tuning_filename, wave_file_name, cue_file_name = sys.argv[1:]
 
-wave_file = wave.open(sys.argv[1], 'rb')
+# Loading tuning parameters
+tuning_collection = TuningParameterFileHandler.read_from_file(tuning_filename)
+
+# Open the wave file
+wave_file = wave.open(wave_file_name, 'rb')
 if not wave_file.getnchannels() == 2:
     print("Error: wave file must be in stereo (2 channels)")
     sys.exit(1)
@@ -42,12 +51,12 @@ if not wave_file.getsampwidth() == 2:
     sys.exit(1)
 wave_rate = wave_file.getframerate()
 
-cue_file = CueFileReader(open(sys.argv[2], 'rt'))
-# Make sure no advanced options are used yet, because we don't support them!
-if cue_file.loops_per_layer != 1:
-    print("Error: Current testing version doesn't support multiple loops per layer.")
-    sys.exit(1)
+# Read the cues from the cue file
+cue_file = cue_file_mod.CueFileReader(open(cue_file_name, 'rt'))
+cues = cue_file.read_cues()
+del cue_file
 
+# Setup the audio interface
 pa = pyaudio.PyAudio()
 outstream = pa.open(format=pa.get_format_from_width(2, unsigned=False),
                  channels=2,
@@ -62,79 +71,122 @@ instream = pa.open(format=pa.get_format_from_width(2, unsigned=False),
 outstream.start_stream()
 instream.start_stream()
 
-#drip_file = wave.open('/home/james/peachy/experiments/drip_loop_fast.wav')
+# wave_file uses platform-dependent positions, so we can't seek directly to a position unless we first visit it
+# and save our current position
+frame_position_cache = {} # frame_num : wave.tell() platform-dependent position value
 
-current_layer = 0
-current_sublayer = 0
-current_cue = 0
-current_cue_file_pos = wave_file.tell() # Needed because the calculation for position is platform-dependent
+if USE_VIRTUAL_DRIP:
+    drip_detector = VirtualDripDetector(INPUT_WAVE_RATE, VIRTUAL_DRIP_RATE)
+else:
+    drip_detector = DripDetector(INPUT_WAVE_RATE, debug=DEBUG)
+
+# Initialize cue/frame state
+current_cue_index = 0
+current_cue = cues[current_cue_index]
 current_frame_num = 0
-next_cue = cue_file.next()
-last_frame = STEREO_WAVE_STRUCT.pack(0, 0)
-drip_detector = DripDetector(INPUT_WAVE_RATE)
+frame_position_cache[current_frame_num] = wave_file.tell()
 
-print('Starting first layer')
+if DEBUG_STREAM:
+    debug_outfile = wave.open('./debug.wav', 'wb')
+    debug_outfile.setnchannels(2)
+    debug_outfile.setframerate(wave_rate)
+    debug_outfile.setsampwidth(2)
+
+## Main loop for recording/playback
+print('Playing %d cues...' % len(cues))
 try:
     while True:
-        # Refill buffer as much as possible, stopping at cue point if present
-        buffer_frames_available = outstream.get_write_available()
-        if not buffer_frames_available:
-            time.sleep(0.01)
-            continue
-        layer_frames_available = next_cue - current_frame_num
-        num_layer_frames_to_write = min(layer_frames_available, buffer_frames_available)
-        if num_layer_frames_to_write:
-            frames = wave_file.readframes(num_layer_frames_to_write)
-            last_frame = frames[-4:]
-            outstream.write(frames)
-            current_frame_num += num_layer_frames_to_write
-            layer_frames_available -= num_layer_frames_to_write
-            buffer_frames_available -= num_layer_frames_to_write
-        # See if we need to fill the rest of the buffer with holding samples
-        if buffer_frames_available and not layer_frames_available:
-            hold_tuple = STEREO_WAVE_STRUCT.unpack(last_frame)
-            hold_pos = (hold_tuple[0]/MAX_S16, hold_tuple[1]/MAX_S16)
-            hold_frames = bytes(last_frame * buffer_frames_available)
-            outstream.write(hold_frames)
         # Process audio input
         buffer_frames_available = instream.get_read_available()
         if buffer_frames_available:
             frames = instream.read(buffer_frames_available)
-            ## Use fake data from a test input instead
-            #frames = drip_file.readframes(buffer_frames_available)
-            #frames_read = int(len(frames)/2)
-            #if frames_read < buffer_frames_available:
-            #    drip_file.rewind()
-            #    frames += drip_file.readframes(buffer_frames_available-frames_read)
             drip_detector.add_frames(frames)
-        # See if it's time to advance the layer
-        layer_by_drips = int(math.floor(drip_detector.num_drips/DRIPS_PER_LAYER))
-        if layer_by_drips > current_layer:
-            # Always advance wave file to start of current layer to ensure we save start pos properly
-            current_cue = next_cue
-            if current_frame_num < current_cue:
-                print('*** Ran out of time to finish the current sublayer before next layer!')
-                wave_file.readframes(current_cue-current_frame_num)
-            current_cue_file_pos = wave_file.tell()
-            try:
-                next_cue = cue_file.next()
-            except StopIteration:
-                break
-            current_layer += 1
-            print('Starting layer %d' % (current_layer+1))
-        # See if it's time to advance the sublayer
-        sublayer_by_drips = int(math.floor(drip_detector.num_drips/DRIPS_PER_SUBLAYER))
-        if sublayer_by_drips > current_sublayer:
-            if current_frame_num < next_cue:
-                print('*** Ran out of time to finish the current sublayer before next sublayer!')
-            # Rewind to start of current layer
-            wave_file.setpos(current_cue_file_pos)
-            current_frame_num = current_cue
-            current_sublayer += 1
-    print("Waiting for final layer to finish...")
+        # Determine output
+        buffer_frames_available = outstream.get_write_available()
+        if not buffer_frames_available:
+            # If no room in buffer, check again later
+            time.sleep(0.01)
+            continue
+        # Fill the buffer, using multiple cues if necessary
+        while buffer_frames_available:
+            # Use as many frames as possible from the current cue, up to the amount of room left
+            cue_frames_available = current_cue.end_frame - current_frame_num
+            num_frames_to_play = min(buffer_frames_available, cue_frames_available)
+            if TRACE:
+                print('cue_frames_available=%d, buffer_frames_available=%d, num_frames_to_play=%d' % (
+                    cue_frames_available, buffer_frames_available, num_frames_to_play
+                ))
+            if num_frames_to_play:
+                frames = wave_file.readframes(num_frames_to_play)
+                current_frame_num += num_frames_to_play
+                if TRACE:
+                    print('read %d frames (%d bytes); current_frame_num=%d' % (
+                        num_frames_to_play, len(frames), current_frame_num
+                    ))
+                outstream.write(frames)
+                if DEBUG_STREAM:
+                    debug_outfile.writeframes(frames)
+            buffer_frames_available -=  num_frames_to_play
+            # If we exhausted this cue, determine which one to use next
+            if current_frame_num == current_cue.end_frame:
+                if TRACE:
+                    print('reached end of current cue')
+                # If we're in a LOOP_UNTIL_HEIGHT cue, see if we should loop or continue onward
+                current_height = float(drip_detector.num_drips) / tuning_collection.drips_per_height
+                if (current_cue.cue_type == cue_file_mod.CueTypes.LOOP_UNTIL_HEIGHT
+                        and current_height < current_cue.until_height):
+                    if TRACE:
+                        print('relooping current cue back to frame %d' % (current_cue.start_frame,))
+                    # Loop back to the start of this cue
+                    current_frame_num = current_cue.start_frame
+                    wave_pos = frame_position_cache[current_frame_num]
+                    wave_file.setpos(wave_pos)
+                else:
+                    # Advance to next cue
+                    current_cue_index += 1
+                    if current_cue_index >= len(cues):
+                        # We've reached the end and can now exit
+                        raise StopIteration('Reached end of cue list')
+                    current_cue = cues[current_cue_index]
+                    print('Playing cue %d of %d (%2.1f%%)' % (
+                        current_cue_index+1, len(cues), 100.0*float(current_cue_index+1)/float(len(cues))
+                    ))
+                    if DEBUG:
+                        print('Height = %0.3f' % current_height)
+                    # How do we get to the new cue position?
+                    new_frame_num = current_cue.start_frame
+                    if new_frame_num in frame_position_cache:
+                        # Use cached position
+                        wave_pos = frame_position_cache[new_frame_num]
+                        if TRACE:
+                            print('New position in cache; frame_num=%d, wave_pos=%d' % (new_frame_num, wave_pos))
+                        wave_file.setpos(wave_pos)
+                    elif new_frame_num >= current_frame_num:
+                        # Advance by reading and discarding frames
+                        num_frames_to_discard = new_frame_num - current_frame_num
+                        if TRACE:
+                            print('Need to fast-forward to find new position: num_frames_to_discard=%d (%d-%d)' % (
+                                num_frames_to_discard, new_frame_num, current_frame_num
+                            ))
+                        if num_frames_to_discard:
+                            wave_file.readframes(num_frames_to_discard)
+                    else:
+                        if DEBUG:
+                            print('WARNING: Was forced to rewind to seek to frame_num=%d' % new_frame_num)
+                        wave_file.rewind()
+                        wave_file.readframes(new_frame_num)
+                    current_frame_num = new_frame_num
+                    # Save the new start position to the cache (since we're likely to loop back to it)
+                    frame_position_cache[current_frame_num] = wave_file.tell()
+                # NOTE: Don't read and play frames yet; will be handled when loop continues
+except StopIteration:
+    print('Finished playing final cue; waiting for playback to complete.')
 finally:
+    # Stop audio interface
     outstream.stop_stream()
     instream.stop_stream()
     outstream.close()
     instream.close()
     pa.terminate()
+    if DEBUG_STREAM:
+        debug_outfile.close()
