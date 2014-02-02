@@ -51,5 +51,8 @@ class GcodeWriter(object):
             rate = self._rapid_rate
         else:
             raise AssertionError('Unexpected move mode "%s"' % self._move_mode)
-        self._file.write('G1 X%.2f Y%.2f F%.2f\n' % (location[0], location[1], rate))
+        if self._move_mode == MoveModes.FEED:
+            self._file.write('G1 X%.2f Y%.2f F%.2f E1\n' % (location[0], location[1], rate))
+        else:
+            self._file.write('G1 X%.2f Y%.2f F%.2f\n' % (location[0], location[1], rate))
         self._current_location = location
