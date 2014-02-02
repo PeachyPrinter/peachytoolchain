@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Reads a wav file with drips and displays the time of each drip"""
 import wave
 import struct

@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+set -u
+
+EXEC_DIR=$(cd "$(dirname "$0")" && pwd)
+EXEC_NAME=wav_player.py
+SRC_DIR="$EXEC_DIR/src"
+
+PYTHONPATH="$SRC_DIR" exec "$SRC_DIR/$EXEC_NAME"
