@@ -1,4 +1,4 @@
-#!/usr/bin/python3.2
+#!/usr/bin/env python3
 from PySide import QtGui
 import sys
 
