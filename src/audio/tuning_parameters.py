@@ -13,8 +13,6 @@ class TuningParameterCollection(object):
     dwell_y = 0.0
     velocity_x_max = 6000.0
     velocity_y_max = 6000.0
-    accel_x_max = 180000.0
-    accel_y_max = 180000.0
     drips_per_height = 100.0
     sublayer_height = 0.01
     modulation = ModulationTypes.AM
@@ -72,8 +70,6 @@ class TuningParameterCollection(object):
         self.dwell_y = other.dwell_y
         self.velocity_x_max = other.velocity_x_max
         self.velocity_y_max = other.velocity_y_max
-        self.accel_x_max = other.accel_x_max
-        self.accel_y_max = other.accel_y_max
         self.drips_per_height = other.drips_per_height
         self.sublayer_height = other.sublayer_height
         self.modulation = other.modulation

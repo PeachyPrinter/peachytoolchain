@@ -146,12 +146,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.make_edit_signal_handler(self.velocity_y_max_edit, self.tuning_collection, 'velocity_y_max',
                                       lambda x: x > 0)
         )
-        self.accel_x_max_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.accel_x_max_edit, self.tuning_collection, 'accel_x_max', lambda x: x > 0)
-        )
-        self.accel_y_max_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.accel_y_max_edit, self.tuning_collection, 'accel_y_max', lambda x: x > 0)
-        )
         self.drips_per_height_edit.editingFinished.connect(
             self.make_edit_signal_handler(self.drips_per_height_edit, self.tuning_collection, 'drips_per_height',
                                       lambda x: x > 0)
@@ -364,8 +358,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.build_y_max_edit.setText(str(tpc.build_y_max))
         self.velocity_x_max_edit.setText(str(tpc.velocity_x_max))
         self.velocity_y_max_edit.setText(str(tpc.velocity_y_max))
-        self.accel_x_max_edit.setText(str(tpc.accel_x_max))
-        self.accel_y_max_edit.setText(str(tpc.accel_y_max))
         self.dwell_x_edit.setText(str(tpc.dwell_x))
         self.dwell_y_edit.setText(str(tpc.dwell_y))
         self.drips_per_height_edit.setText(str(tpc.drips_per_height))
