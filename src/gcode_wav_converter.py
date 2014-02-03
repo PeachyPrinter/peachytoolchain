@@ -55,6 +55,7 @@ class MachineState:
     layer_start_line_num = 0 # Line number where current layer started
     drawing_sublayer = False    # True while we are looping to draw a sublayer
 
+
 class GcodeConverter:
     KNOWN_GCODES = {
                     'G0': 'gCommandMove',
@@ -254,8 +255,7 @@ class GcodeConverter:
         if end_sublayer > current_sublayer:
             # Need to loop back to the start of this layer for another pass
             if DEBUG:
-                print('''Rewinding to beginning of layer to start next sublayer:
-z_pos=%f, current_sublayer=%d, end_sublayer=%d, layer_start_line_num=%d''' % (
+                print('Rewinding to beginning of layer to start next sublayer:\nz_pos=%f, current_sublayer=%d, end_sublayer=%d, layer_start_line_num=%d' % (
                     state.z_pos, current_sublayer, end_sublayer, state.layer_start_line_num
                 ))
             state.drawing_sublayer = True
