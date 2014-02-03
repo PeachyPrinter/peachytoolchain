@@ -2,6 +2,7 @@ import unittest
 import sys
 import os
 import numpy
+from testhelpers import TestHelpers
 
 sys.path.insert(0,os.path.join(os.path.dirname(__file__), '..', 'src', ))
 from calibrate.shape_generators import NullGenerator
@@ -34,3 +35,20 @@ class NullGeneratorTests(unittest.TestCase):
 
         self.assertEqual(len(value), 0)
 
+class PathGeneratorTests(unittest.TestCase,TestHelpers):
+
+    def test_should_draw_a_line(self):
+        class HorizontalLineGenerator(PathGenerator):
+            PATH = [(-1.0, 0.0), (1.0, 0.0)]
+
+        sampling_rate = 2
+        speed = 1.0
+        size = 1.0
+        center = (0,0)
+        expected = numpy.array([(0.0,0.0),(-0.5,0.0),(0.0,0.0),(0.5,0.0),(0.0,0.0),(-0.5,0.0)])
+
+        generator = HorizontalLineGenerator(sampling_rate,speed,size,center)
+        
+        results = generator.nextN(6)
+
+        self.assertNumpyArrayEquals(expected,results)
