@@ -171,7 +171,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.shape_center_y_edit.editingFinished.connect(self.shape_center_y_changed)
         self.save_button.clicked.connect(self.save_clicked)
         self.load_button.clicked.connect(self.load_clicked)
+
+        #Seg fault happens here
+        calibrations_listview_selection_model = self.calibrations_listview.selectionModel() # workaround
         self.calibrations_listview.selectionModel().selectionChanged.connect(self.calibration_selection_changed)
+
         self.tuning_height_edit.editingFinished.connect(self.tuning_height_changed)
         self.add_calibration_button.pressed.connect(self.add_calibration_pressed)
         self.delete_calibration_button.pressed.connect(self.delete_calibration_pressed)
