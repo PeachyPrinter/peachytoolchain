@@ -36,19 +36,42 @@ class NullGeneratorTests(unittest.TestCase):
         self.assertEqual(len(value), 0)
 
 class PathGeneratorTests(unittest.TestCase,TestHelpers):
+    def setUp(self):
+        self.sampling_rate = 2
+        self.speed = 1.0
+        self.size = 1.0
+        self.center = (0,0)
 
     def test_should_draw_a_line(self):
         class HorizontalLineGenerator(PathGenerator):
             PATH = [(-1.0, 0.0), (1.0, 0.0)]
 
-        sampling_rate = 2
-        speed = 1.0
-        size = 1.0
-        center = (0,0)
         expected = numpy.array([(0.0,0.0),(-0.5,0.0),(0.0,0.0),(0.5,0.0),(0.0,0.0),(-0.5,0.0)])
-
-        generator = HorizontalLineGenerator(sampling_rate,speed,size,center)
+        generator = HorizontalLineGenerator(self.sampling_rate,self.speed,self.size,self.center)
         
         results = generator.nextN(6)
 
         self.assertNumpyArrayEquals(expected,results)
+
+    def test_should_handle_case_when_path_on_vertex(self):
+        class SquareLineGenerator(PathGenerator):
+            PATH = [(0.0,0.0),(1.0,0.0),(1.0,1.0),(0.0,1.0)]
+
+        expected = numpy.array([(0.0,0.0),(0.5,0.0),(0.5,0.5)])
+        generator = SquareLineGenerator(self.sampling_rate,self.speed,self.size,self.center)
+        
+        results = generator.nextN(3)
+
+        self.assertNumpyArrayEquals(expected,results)
+
+    def test_should_handle_case_when_path_not_landing_on_vertex(self):
+        class SquareLineGenerator(PathGenerator):
+            PATH = [(0.0,0.0),(2.7,0.0),(2.7,2.7),(0.0,2.7)]
+
+        expected = numpy.array( [(0.0,0.0),(0.45,0.0),(0.9,0.0),(1.35,0.0), (1.35,0.5)] )
+        generator = SquareLineGenerator(self.sampling_rate,self.speed,self.size,self.center)
+        
+        results = generator.nextN(5)
+
+        self.assertNumpyArrayEquals(expected,results)
+
