@@ -9,3 +9,25 @@ This is the toolchain for producing prints with the Peachy Printer. It consists 
 
 This code is still in an alpha state. Major changes are to be expected to the structure and operation of all parts of this toolchain. This code should not be use as an example for coding practices and standards.
 
+
+calibration
+------------------
+
+* TODO: JT 2014-02-05 - Running instructions
+
+
+Future Development Plans
+------------------
+
+* Scratch Rewrite to eliminate unpackagable licenced dependancies
+* Moving to a Onion Architecture 
+* Moving to a TDD pattern
+* Seperate interface and api
+* Blender plugin and standalone installable
+* Installer / Uninstaller
+
+
+Version History
+------------------
+
+2014-02-02 - Created this History 
