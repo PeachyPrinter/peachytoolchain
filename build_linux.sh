@@ -40,6 +40,22 @@ echo "revision='$GIT_REV'" >> version.properties
 echo "Git Revision Number is $GIT_REV_COUNT"
 cp version.properties src/VERSION.py
 
+echo "------------------------------------"
+echo "Running Tests"
+echo "------------------------------------"
+
+python test/test.py
+
+if [ $? != 0 ]; then
+    echo "FAILED TESTS ABORTING"
+    exit 666
+fi
+
+echo "------------------------------------"
+echo "Making files"
+echo "------------------------------------"
+
+make
 
 echo "------------------------------------"
 echo "Create Peachy Tool Chain archive"
@@ -51,3 +67,4 @@ tar rvf PeachyToolChain-$VERSION.tar src/
 tar rvf PeachyToolChain-$VERSION.tar doc/
 tar rvf PeachyToolChain-$VERSION.tar models/
 tar rvf PeachyToolChain-$VERSION.tar audio_test_files/
+tar rvy PeachyToolChain-$VERSION.tar bin/*.sh
