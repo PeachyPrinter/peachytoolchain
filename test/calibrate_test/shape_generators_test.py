@@ -75,3 +75,27 @@ class PathGeneratorTests(unittest.TestCase,TestHelpers):
 
         self.assertNumpyArrayEquals(expected,results)
 
+    def test_should_go_as_far_as_possible_when_vertex_cannot_be_reached(self):
+        class SquareLineGenerator(PathGenerator):
+            PATH = [(0.0,0.0),(3.0,0.0),(3.0,3.0),(0.0,3.0)]
+
+        expected = numpy.array( [(0.0,0.0),(0.5,0.0),(1.0,0.0)] )
+        generator = SquareLineGenerator(self.sampling_rate,self.speed,self.size,self.center)
+        
+        results = generator.nextN(3)
+
+        self.assertNumpyArrayEquals(expected,results)
+
+    def test_should_go_as_far_as_possible_and_resume_when_vertex_cannot_be_reached(self):
+        class SquareLineGenerator(PathGenerator):
+            PATH = [(0.0,0.0),(3.0,0.0),(3.0,3.0),(0.0,3.0)]
+
+        expected_1 = numpy.array( [(0.0,0.0),(0.5,0.0),(1.0,0.0)] )
+        expected_2 = numpy.array( [(1.5,0.0),(1.5,0.5),(1.5,1.0)] )
+        generator = SquareLineGenerator(self.sampling_rate,self.speed,self.size,self.center)
+        
+        results_1 = generator.nextN(3)
+        self.assertNumpyArrayEquals(expected_1,results_1)
+
+        results_2 = generator.nextN(3)
+        self.assertNumpyArrayEquals(expected_2,results_2)
