@@ -1,12 +1,4 @@
-echo ------------------------------------
-echo Running Tests
-echo ------------------------------------
-
-python test/test.py
-IF NOT ERRORLEVEL 0 (
-    echo FAILED TESTS ABORTING
-    REM exit 1
-)@echo off
+@echo off
 
 echo ------------------------------------
 echo Cleaning workspace
