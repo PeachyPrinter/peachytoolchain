@@ -1,4 +1,12 @@
-@echo off
+echo ------------------------------------
+echo Running Tests
+echo ------------------------------------
+
+python test/test.py
+IF NOT ERRORLEVEL 0 (
+    echo FAILED TESTS ABORTING
+    REM exit 1
+)@echo off
 
 echo ------------------------------------
 echo Cleaning workspace
@@ -36,15 +44,6 @@ echo revision='%GIT_REV%' >> version.properties
 echo Git Revision Number is %GIT_REV_COUNT%
 copy version.properties src/VERSION.py
 
-echo ------------------------------------
-echo Running Tests
-echo ------------------------------------
-
-python test/test.py
-IF NOT ERRORLEVEL 0 (
-    echo FAILED TESTS ABORTING
-    REM exit 1
-)
 
 echo ------------------------------------
 echo Making files
@@ -52,7 +51,22 @@ echo ------------------------------------
 
 cd src
 make
+IF NOT ERRORLEVEL 0 (
+    echo FAILED MAKE ABORTING
+    cd ..
+    exit 1
+)
 cd ..
+
+echo ------------------------------------
+echo Running Tests
+echo ------------------------------------
+
+python test/test.py
+IF NOT ERRORLEVEL 0 (
+    echo FAILED TESTS ABORTING
+    exit 1
+)
 
 echo ------------------------------------
 echo Create Peachy Tool Chain archive
