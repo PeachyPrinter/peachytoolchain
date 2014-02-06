@@ -12,6 +12,11 @@ Current Version
 Windows
 ---------------
 
+Install Python 2.7.6 32bit http://python.org
+Install numpy 2.8 http://www.numpy.org 
+Install make gnumake32 http://gnumake32.sourceforge.net
+
+Install 7zip CLI http://www.7-zip.org/ (develop only requirement)
 
 
 Mac OSX

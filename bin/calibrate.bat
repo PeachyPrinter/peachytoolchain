@@ -1,1 +1,1 @@
-echo "Strating Calibration"
+echo "Strarting Calibration"
