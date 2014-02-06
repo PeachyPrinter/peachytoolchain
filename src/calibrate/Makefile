@@ -6,7 +6,7 @@ RCC_OPT =
 
 .PHONY: clean
 
-UI_FILES = $(ui_mainwindow.ui)
+UI_FILES = $(wildcard *.ui)
 #RESOURCE_FILES = $(shell find ../resources -name *.qrc)
 
 %.py: %.ui
