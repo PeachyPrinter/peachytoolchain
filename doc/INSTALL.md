@@ -6,12 +6,12 @@ For the purpose of development and early access testing
 
 Current Version
 ---------------
-
 0.0.1.* alpha
 
 
 Windows
 ---------------
+
 
 
 Mac OSX
@@ -34,3 +34,4 @@ Run
 
 Linux (debian)
 ---------------
+
