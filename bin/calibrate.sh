@@ -22,7 +22,7 @@ if [ $? != 0 ]; then
     WILL_EXIT=true
 fi
 
-python -c 'import pyaudio'
+python -c 'import PySide'
 if [ $? != 0 ]; then
     echo "PySide not installed"
     WILL_EXIT=true
