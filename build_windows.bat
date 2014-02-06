@@ -50,7 +50,9 @@ echo ------------------------------------
 echo Making files
 echo ------------------------------------
 
+cd src
 make
+cd ..
 
 echo ------------------------------------
 echo Create Peachy Tool Chain archive
