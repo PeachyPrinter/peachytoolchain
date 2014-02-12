@@ -54,7 +54,7 @@ echo ------------------------------------
 echo Running Tests
 echo ------------------------------------
 
-python test/test.py
+python test/tests.py
 IF NOT ERRORLEVEL 0 (
     echo FAILED TESTS ABORTING
     exit 1

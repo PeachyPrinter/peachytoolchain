@@ -54,7 +54,7 @@ echo "------------------------------------"
 echo "Running Tests"
 echo "------------------------------------"
 
-python test/test.py
+python test/tests.py
 
 if [ $? != 0 ]; then
     echo "FAILED TESTS ABORTING"
