@@ -41,6 +41,16 @@ echo "Git Revision Number is $GIT_REV_COUNT"
 cp version.properties src/VERSION.py
 
 echo "------------------------------------"
+echo "Making files"
+echo "------------------------------------"
+
+make
+if [ $? != 0 ]; then
+    echo "FAILED BUILDING ABORTING"
+    exit 55
+fi
+
+echo "------------------------------------"
 echo "Running Tests"
 echo "------------------------------------"
 
@@ -48,14 +58,9 @@ python test/test.py
 
 if [ $? != 0 ]; then
     echo "FAILED TESTS ABORTING"
-    exit 666
+    exit 55
 fi
 
-echo "------------------------------------"
-echo "Making files"
-echo "------------------------------------"
-
-make
 
 echo "------------------------------------"
 echo "Create Peachy Tool Chain archive"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Starting Calibration"
-WORKING_DIRECTORY="${BASH_SOURCE%/*}"
+WORKING_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Verifying Requirements
 python --version

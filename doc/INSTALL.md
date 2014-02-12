@@ -29,7 +29,14 @@ Install Home Brew - From the terminal run
 Install PySide,  from the teminal run
 
     brew install PySide
-    brew install 
+
+Manually link PySide from the terminal run
+    
+    ln -s /usr/local/lib/python2.7/site-packages/PySide/ /Library/Python/2.7/site-packages/PySide
+
+Install pyaudio from http://people.csail.mit.edu/hubert/pyaudio/packages/pyaudio-0.2.7.dmg (You may have to right click and option open to install it)
+
+
 
 
 Linux (debian)
