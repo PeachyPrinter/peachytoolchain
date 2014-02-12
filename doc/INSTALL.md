@@ -1,7 +1,7 @@
 INSTALLATION 
 ==============
 
-For the purpose of development and early access testing
+For the purpose of early access testing
 
 
 Current Version
@@ -12,13 +12,10 @@ Current Version
 Windows
 ---------------
 
-Install Python 2.7.6 32bit http://python.org
-Install numpy 2.8 http://www.numpy.org 
-Install make gnumake32 http://gnumake32.sourceforge.net
-
-Install 7zip CLI http://www.7-zip.org/ (develop only requirement)
-Path to Python\Scripts
-Install  Setuptools
+* Install Python - choose the "Python 2.7.6 Windows Installer" link at http://python.org/download/
+* Install PySide - download and install "PySide-1.2.1.win32-py2.7.exe" from  http://qt-project.org/wiki/PySide_Binaries_windows
+* Install PyAudio - In the windows section select the option "PyAudio for Python 2.7" http://people.csail.mit.edu/hubert/pyaudio/#downloads
+* Install numpy 2.8 - download and install http://www.numpy.org http://sourceforge.net/projects/numpy/files/NumPy/1.8.0/numpy-1.8.0-win32-superpack-python2.7.exe/download
 
 
 Mac OSX

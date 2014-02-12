@@ -1,6 +1,8 @@
 peachytoolchain
 ===============
 
+NOTE: For installation instructions see docs/INSTALL.md
+
 This is the toolchain for producing prints with the Peachy Printer. It consists of 3 major tools:
 
 * *calibrate* -- Interactive tool for drawing patterns and configuring tuning parameters to match the behaviour of your printer.

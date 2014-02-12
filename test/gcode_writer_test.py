@@ -16,7 +16,7 @@ def dataFile(filename):
 class GcodeWriterTest(unittest.TestCase):
 
     def setUp(self):
-        self.tmp_dir = tempfile.mkdtemp(prefix=str(os.path.join('tmp','unittest-'))
+        self.tmp_dir = tempfile.mkdtemp(prefix=str(os.path.join('tmp','unittest-')))
 
     def tearDown(self):
         if self.tmp_dir is not None:
