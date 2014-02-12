@@ -21,19 +21,15 @@ Windows
 Mac OSX
 --------------
 
-* Install XCode
-* Install XCode commandline tools
-* Install HomeBrew
-* use brew to install
+Install Home Brew - From the terminal run
 
-	brew install pyside<br>
-	brew install pyside-tools
+    ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+    this may prompt an install of Xcode click "Install" you will need to accept the xcode license
 
-* Install pyaudio [PyAudio] http://people.csail.mit.edu/hubert/pyaudio/packages/pyaudio-0.2.7.dmg
+Install PySide,  from the teminal run
 
-Run
-
-	make
+    brew install PySide
+    brew install 
 
 
 Linux (debian)

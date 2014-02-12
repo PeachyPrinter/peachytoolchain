@@ -36,4 +36,6 @@ if [ $WILL_EXIT ]; then
 fi
 
 echo "Requirments met"
-
+pushd $WORKING_DIRECTORY
+python ../src/calibrate-main.py
+popd
