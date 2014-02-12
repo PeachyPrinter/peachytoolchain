@@ -201,6 +201,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pattern_combobox.setCurrentIndex(0)
         self.modulation_radioButton_AM.setChecked(True)
         self.laser_power_radioButton_On.setChecked(True)
+        self.tuning_parameters = self.tuning_collection.get_tuning_parameters_for_height(0.0)
+        
+        
 
     def make_edit_signal_handler(self, edit, container, var_name, validator=None, after=None):
         def fn():
