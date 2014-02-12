@@ -55,7 +55,6 @@ echo "Running Tests"
 echo "------------------------------------"
 
 python test/test.py
-
 if [ $? != 0 ]; then
     echo "FAILED TESTS ABORTING"
     exit 55
