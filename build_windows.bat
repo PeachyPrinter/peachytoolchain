@@ -41,14 +41,11 @@ echo ------------------------------------
 echo Making files
 echo ------------------------------------
 
-cd src
 make
 IF NOT ERRORLEVEL 0 (
     echo FAILED MAKE ABORTING
-    cd ..
     exit 1
 )
-cd ..
 
 echo ------------------------------------
 echo Running Tests
