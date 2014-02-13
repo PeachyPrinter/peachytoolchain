@@ -21,24 +21,38 @@ Windows
 Mac OSX
 --------------
 
-Install Home Brew - From the terminal run
+* Install Home Brew - From the terminal run
 
     ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
     this may prompt an install of Xcode click "Install" you will need to accept the xcode license
 
-Install PySide,  from the teminal run
+* Install PySide,  from the teminal run
 
     brew install PySide
 
-Manually link PySide from the terminal run
+* Manually link PySide from the terminal run
     
     ln -s /usr/local/lib/python2.7/site-packages/PySide/ /Library/Python/2.7/site-packages/PySide
 
-Install pyaudio from http://people.csail.mit.edu/hubert/pyaudio/packages/pyaudio-0.2.7.dmg (You may have to right click and option open to install it)
+* Install pyaudio from http://people.csail.mit.edu/hubert/pyaudio/packages/pyaudio-0.2.7.dmg (You may have to right click and option open to install it)
 
+Mac OSX
+-------------------
 
-
+* Download and install PySide http://pyside.markus-ullmann.de/pyside-1.2.1-qt4.8.5-py27apple-developer-signed.pkg
+* Download and install QT http://download.qt-project.org/official_releases/qt/4.8/4.8.5/qt-mac-opensource-4.8.5.dmg
+* Download and install pyaudio from http://people.csail.mit.edu/hubert/pyaudio/packages/pyaudio-0.2.7.dmg (You may have to right click and option open to install it)
 
 Linux (debian)
 ---------------
 
+Run the following from a terminal:
+    
+    sudo apt-get -y install python-numpy python-pyaudio python-PySide
+
+Linux (RedHat)
+---------------
+
+Run the following from a terminal:
+    
+    sudo yum -y install python-numpy python-pyaudio python-PySide
