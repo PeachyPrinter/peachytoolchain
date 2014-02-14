@@ -149,3 +149,16 @@ class SquareGenerator(PathGenerator):
     Generator that creates a simple square. Useful for testing transformations during calibration.
     """
     PATH =  [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)]
+
+class YlineGenerator(PathGenerator):
+    """
+    Generator that creates a vertical. Useful for testing yMax.
+    """
+    PATH =  [(0.0, -1.0),(0.0, 0.0), (0.0, 1.0)]
+
+class XlineGenerator(PathGenerator):
+    """
+    Generator that creates a vertical. Useful for testing yMax.
+    """
+    PATH =  [(-1.0, 0.0),(0.0, 0.0), (1.0, 0.0)]
+

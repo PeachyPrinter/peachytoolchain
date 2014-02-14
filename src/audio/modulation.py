@@ -62,7 +62,7 @@ class AmplitudeModulator(Modulator):
     AM_MINIMUM_AMPLITUDE = 0.25
     AM_MAXIMUM_AMPLITUDE = 1.00
     AM_CARRIER_FREQ_LASER_ON = 11025.0
-    AM_CARRIER_FREQ_LASER_OFF = 11025.0/4.0 # 11025/4
+    AM_CARRIER_FREQ_LASER_OFF = 11025.0/4.0
     NUM_CYCLES_TO_CALCULATE = 128 # The calculated modulation waveform will contain this many full cycles before repeating
 
     def __init__(self, sampling_rate):
@@ -85,6 +85,9 @@ class AmplitudeModulator(Modulator):
                                                              num=cycle_period, endpoint=False))
         self._current_cycle = 0
 
+    def _modulated_value_in_limits(self, modulated_values):
+        return numpy.all(modulated_values < self.AM_MAXIMUM_AMPLITUDE) and numpy.all(modulated_values > self.AM_MINIMUM_AMPLITUDE)
+
     def modulate_values(self, values):
         num_values = values.shape[0]
         waveform_indices = numpy.remainder(numpy.arange(num_values)+self._current_cycle, self._modulation_waveform.shape[0])
@@ -97,6 +100,10 @@ class AmplitudeModulator(Modulator):
         # Then shift to the min/max
         left = self.AM_MINIMUM_AMPLITUDE + left * (self.AM_MAXIMUM_AMPLITUDE-self.AM_MINIMUM_AMPLITUDE)
         right = self.AM_MINIMUM_AMPLITUDE + right * (self.AM_MAXIMUM_AMPLITUDE-self.AM_MINIMUM_AMPLITUDE)
+        
+        if ( not self._modulated_value_in_limits(left) or not self._modulated_value_in_limits(right)):
+            raise Exception("Model exceeds bounds, try a smaller model")
+
         left = left * modulation_waveform
         right = right * modulation_waveform
         self._current_cycle = (self._current_cycle + num_values) % self._modulation_waveform.shape[0]

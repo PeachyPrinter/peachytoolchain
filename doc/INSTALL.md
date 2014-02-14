@@ -19,24 +19,6 @@ Windows
 
 
 Mac OSX
---------------
-
-* Install Home Brew - From the terminal run
-
-    ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
-    this may prompt an install of Xcode click "Install" you will need to accept the xcode license
-
-* Install PySide,  from the teminal run
-
-    brew install PySide
-
-* Manually link PySide from the terminal run
-    
-    ln -s /usr/local/lib/python2.7/site-packages/PySide/ /Library/Python/2.7/site-packages/PySide
-
-* Install pyaudio from http://people.csail.mit.edu/hubert/pyaudio/packages/pyaudio-0.2.7.dmg (You may have to right click and option open to install it)
-
-Mac OSX
 -------------------
 
 * Download and install PySide http://pyside.markus-ullmann.de/pyside-1.2.1-qt4.8.5-py27apple-developer-signed.pkg

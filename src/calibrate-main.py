@@ -29,7 +29,10 @@ audio.start()
 
 generators = {'Square': shape_generators.SquareGenerator,
               'Star': shape_generators.StarGenerator,
-              'Zero': shape_generators.NullGenerator}
+              'Zero': shape_generators.NullGenerator,
+              'Yline': shape_generators.YlineGenerator,
+              'Xline': shape_generators.XlineGenerator,
+              }
 mainwindow = MainWindow(tuning, audio, modulator_proxy, transformer_proxy, generators, height_adapter, SAMPLING_RATE)
 mainwindow.show()
 retcode = app.exec_()
