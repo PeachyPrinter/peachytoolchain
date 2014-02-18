@@ -68,3 +68,16 @@ echo ------------------------------------
 7za a -tzip PeachyToolChain-%VERSION%.zip models/
 7za a -tzip PeachyToolChain-%VERSION%.zip audio_test_files/
 7za a -tzip PeachyToolChain-%VERSION%.zip bin/*.bat
+
+echo ------------------------------------
+echo Create Peachy Tool Chain Application
+echo ------------------------------------
+
+cd src
+python setup.py bdist_msi
+iIF NOT ERRORLEVEL 0 (
+    echo FAILED TESTS ABORTING
+    exit 1
+)
+cd ..
+move src\build*.msi .

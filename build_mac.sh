@@ -4,6 +4,7 @@ echo "------------------------------------"
 echo "Cleaning workspace"
 echo "------------------------------------"
 rm -rf PeachyToolChain-*.tar
+rm -rf src/build
 # TODO JT 2014-02-04 - Should clean the workspace
 
 echo "------------------------------------"
@@ -72,3 +73,18 @@ tar rvf PeachyToolChain-$VERSION.tar doc/
 tar rvf PeachyToolChain-$VERSION.tar models/
 tar rvf PeachyToolChain-$VERSION.tar audio_test_files/
 tar rvf PeachyToolChain-$VERSION.tar bin/*.sh
+
+echo "------------------------------------"
+echo "Create Peachy Tool Chain Application"
+echo "------------------------------------"
+
+cd src
+python setup.py bdist_dmg
+if [ $? != 0 ]; then
+    echo "Packaging Failed Aborting"
+    exit 55
+fi
+cd ..
+mv src/build/*.dmg .
+
+
