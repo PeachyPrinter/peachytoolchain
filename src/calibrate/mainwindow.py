@@ -165,7 +165,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.x_trapezoid_spin.valueChanged.connect(self.x_trapezoid_changed)
         self.y_trapezoid_spin.valueChanged.connect(self.y_trapezoid_changed)
         self.pattern_combobox.currentIndexChanged.connect(self.pattern_changed)
-        self.speed_edit.editingFinished.connect(self.speed_changed)
+        self.speed_edit.valueChanged.connect(self.speed_changed)
         self.size_edit.editingFinished.connect(self.size_changed)
         self.shape_center_x_edit.editingFinished.connect(self.shape_center_x_changed)
         self.shape_center_y_edit.editingFinished.connect(self.shape_center_y_changed)
@@ -266,14 +266,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         )
         self.generator = self.generators[pattern_name](
             self.sampling_rate,
-            self.get_speed(),
+            int(self.get_speed()),
             self.get_size(),
             self.get_shape_center()
         )
         self.height_adapter.generator = self.generator
 
     def speed_changed(self):
-        self.generator.speed = self.get_speed()
+        self.generator.speed = int(self.get_speed())
 
     def get_speed(self):
         try:
@@ -281,10 +281,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         except ValueError:
             # Invalid value entered -- reset
             speed = self.generator.speed
-            self.speed_edit.setText(str(speed))
+            self.speed_edit.setValue(speed)
         if speed <= 0:
             speed = self.generator.speed
-        self.speed_edit.setText(str(speed))
+
+        self.speed_edit.setValue(speed)
         return speed
 
     def size_changed(self):

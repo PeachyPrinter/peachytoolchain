@@ -73,11 +73,12 @@ echo ------------------------------------
 echo Create Peachy Tool Chain Application
 echo ------------------------------------
 
-cd src
-python setup.py bdist_msi
-iIF NOT ERRORLEVEL 0 (
-    echo FAILED TESTS ABORTING
-    exit 1
-)
-cd ..
-move src\build*.msi .
+REM cd src
+REM python setup.py bdist_msi
+REM iIF NOT ERRORLEVEL 0 (
+REM     echo FAILED TESTS ABORTING
+REM     exit 1
+REM )
+REM cd ..
+REM move src\build*.msi .
+REM 
