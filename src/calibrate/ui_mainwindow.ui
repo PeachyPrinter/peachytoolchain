@@ -242,7 +242,7 @@
                   <double>0.000000000000000</double>
                  </property>
                  <property name="maximum">
-                  <double>6000.000000000000000</double>
+                  <double>1000000.000000000000000</double>
                  </property>
                  <property name="singleStep">
                   <double>5.000000000000000</double>
@@ -252,6 +252,42 @@
                  </property>
             </widget>
            </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_25">
+             <property name="text">
+              <string>Ramp Time</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1" >
+              <widget class="QDoubleSpinBox" name="ramp_speed_time">
+                  <property name="minimum">
+                  <double>0.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>10.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.010000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>1.000000000000000</double>
+                 </property>
+              </widget>
+          </item>
+           <item row="4" column="2">
+            <widget class="QLabel" name="label_25">
+             <property name="text">
+              <string>Run Ramp</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3" >
+              <widget class="QCheckBox" name="ramp_speed">
+                <checked>false</checked>
+              </widget>
+          </item>
+          
            <item row="1" column="0">
             <widget class="QLabel" name="label_25">
              <property name="text">
@@ -276,14 +312,14 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
+           <item row="5" column="1">
             <widget class="QLineEdit" name="size_edit">
              <property name="text">
               <string>50.0</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="0">
+           <item row="5" column="0">
             <widget class="QLabel" name="label_16">
              <property name="text">
               <string>Size</string>
@@ -297,28 +333,28 @@
              </property>
             </widget>
            </item>
-           <item row="5" column="0">
+           <item row="6" column="0">
             <widget class="QLabel" name="label_21">
              <property name="text">
               <string>Center</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="1">
+           <item row="6" column="1">
             <widget class="QLineEdit" name="shape_center_x_edit">
              <property name="text">
               <string>0.0</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="2">
+           <item row="6" column="2">
             <widget class="QLineEdit" name="shape_center_y_edit">
              <property name="text">
               <string>0.0</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="3">
+           <item row="6" column="3">
             <widget class="QLabel" name="label_38">
              <property name="text">
               <string>units</string>
@@ -332,7 +368,7 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="2">
+           <item row="5" column="2">
             <widget class="QLabel" name="label_22">
              <property name="text">
               <string>units</string>

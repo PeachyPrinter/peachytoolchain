@@ -1,5 +1,6 @@
 from PySide import QtCore, QtGui
 import os.path
+import threading
 
 from .ui_mainwindow import Ui_MainWindow
 from audio.tuning_parameter_file import TuningParameterFileHandler
@@ -167,13 +168,15 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pattern_combobox.currentIndexChanged.connect(self.pattern_changed)
         self.speed_edit.valueChanged.connect(self.speed_changed)
         self.size_edit.editingFinished.connect(self.size_changed)
+        ramp_speed = self.ramp_speed.stateChanged # Seg Fault Workaround
+        self.ramp_speed.stateChanged.connect(self.ramp_speed_checked)
+        self.ramp_speed_time.valueChanged.connect(self.ramp_speed_time_changed)
         self.shape_center_x_edit.editingFinished.connect(self.shape_center_x_changed)
         self.shape_center_y_edit.editingFinished.connect(self.shape_center_y_changed)
         self.save_button.clicked.connect(self.save_clicked)
         self.load_button.clicked.connect(self.load_clicked)
 
-        #Seg fault happens here
-        calibrations_listview_selection_model = self.calibrations_listview.selectionModel() # workaround
+        calibrations_listview_selection_model = self.calibrations_listview.selectionModel() # Seg fault workaround
         self.calibrations_listview.selectionModel().selectionChanged.connect(self.calibration_selection_changed)
 
         self.tuning_height_edit.editingFinished.connect(self.tuning_height_changed)
@@ -274,6 +277,31 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def speed_changed(self):
         self.generator.speed = int(self.get_speed())
+
+    _ramp_speed_interval = None
+    _ramp_timer = None
+    _ramp_maximum = 100000.0
+    def _increase_size(self, amount = 1):
+        if (self.generator.speed < self._ramp_maximum and self.ramp_speed.checkState()):
+            speed = self.generator.speed + 1
+            self.speed_edit.setValue(speed)
+            self._ramp_timer = threading.Timer(self._ramp_speed_interval, self._increase_size)
+            self._ramp_timer.daemon=True
+            self._ramp_timer.start()
+        else:
+            self.ramp_speed.setCheckState(QtCore.Qt.Unchecked)
+
+    def ramp_speed_checked(self):
+        if (self.ramp_speed.checkState()):
+            self._ramp_speed_interval = self.ramp_speed_time.value()
+            self._increase_size()
+        else:
+            if (self._ramp_timer):
+                self._ramp_timer.cancel()
+            self._ramp_timer = None
+
+    def ramp_speed_time_changed(self):
+        self._ramp_speed_interval = self.ramp_speed_time.value()
 
     def get_speed(self):
         try:
