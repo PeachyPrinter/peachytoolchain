@@ -78,13 +78,13 @@ echo "------------------------------------"
 echo "Create Peachy Tool Chain Application"
 echo "------------------------------------"
 
-# cd src
-# python setup.py bdist_dmg
-# if [ $? != 0 ]; then
-#     echo "Packaging Failed Aborting"
-#     exit 55
-# fi
-# cd ..
-# mv src/build/*.dmg .
+cd src
+python setup.py bdist_dmg
+if [ $? != 0 ]; then
+    echo "Packaging Failed Aborting"
+    exit 55
+fi
+cd ..
+mv src/build/*.dmg .
 
 
