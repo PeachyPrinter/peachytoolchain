@@ -5,6 +5,7 @@ echo Cleaning workspace
 echo ------------------------------------
 
 del PeachyToolChain-*.zip
+del *.msi
 rmdir /s src\build
 REM TODO JT 2014-02-04 - Should clean the workspace
 
