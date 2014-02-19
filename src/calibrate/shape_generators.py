@@ -162,3 +162,23 @@ class XlineGenerator(PathGenerator):
     """
     PATH =  [(-1.0, 0.0),(0.0, 0.0), (1.0, 0.0)]
 
+class GridGenerator(PathGenerator):
+    """
+    Generator that creates a vertical. Useful for testing yMax.
+    """
+    PATH =  [(-1.0,-1.0)]
+    width = 8
+    grid_size = (2.0 / width)
+    for x in range(0,width):
+        for y in range(0,width):
+            current_y = (grid_size * y) - 1.0
+            current_x = (grid_size * x) - 1.0
+            PATH = PATH + [
+                    (current_x,current_y),
+                    (current_x,current_y + grid_size),
+                    (current_x + grid_size,current_y + grid_size),
+                    (current_x + grid_size,current_y),
+                    (current_x,current_y)]
+        PATH = PATH + [(current_x,-1.0)]
+    PATH =  PATH + [(-1.0,-1.0)]
+

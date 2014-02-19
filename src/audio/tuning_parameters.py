@@ -94,7 +94,7 @@ class TuningParameters(object):
         self.rotation = 0.0
         self.x_shear = 0.0
         self.y_shear = 0.0
-        self.x_scale = 1.0
+        self.x_scale = 0.6
         self.y_scale = 1.0
         self.x_trapezoid = 0.0
         self.y_trapezoid = 0.0

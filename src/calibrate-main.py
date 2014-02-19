@@ -32,6 +32,7 @@ generators = {'Square': shape_generators.SquareGenerator,
               'Zero': shape_generators.NullGenerator,
               'Yline': shape_generators.YlineGenerator,
               'Xline': shape_generators.XlineGenerator,
+              'Grid': shape_generators.GridGenerator
               }
 mainwindow = MainWindow(tuning, audio, modulator_proxy, transformer_proxy, generators, height_adapter, SAMPLING_RATE)
 mainwindow.show()
