@@ -12,7 +12,7 @@ echo "Extracting Git Revision Number"
 echo "------------------------------------"
 
 # TODO JT 2014-02-04 - Should extract the sematic file to  common place
-SEMANTIC=0.0.1a
+SEMANTIC=0.0.1
 
 function trim() { echo $1; }
 

@@ -12,7 +12,7 @@ executables = [
 ]
 
 setup(name='PeachyToolChain',
-      version = '0.1a',
+      version = '0.1',
       description = 'Peachy Printer Untilities',
       options = dict(build_exe = buildOptions),
       executables = executables)

@@ -13,7 +13,7 @@ echo ------------------------------------
 
 REM TODO JT 2014-02-04 - Should extract the sematic file to  common place
 
-set SEMANTIC=0.0.1a
+set SEMANTIC=0.0.1
 IF NOT DEFINED GIT_HOME (
   git --version
   IF ERRORLEVEL 0 (
