@@ -167,7 +167,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.y_trapezoid_spin.valueChanged.connect(self.y_trapezoid_changed)
         self.pattern_combobox.currentIndexChanged.connect(self.pattern_changed)
         self.speed_edit.valueChanged.connect(self.speed_changed)
-        self.size_edit.editingFinished.connect(self.size_changed)
+        self.size_edit.valueChanged.connect(self.size_changed)
         ramp_speed = self.ramp_speed.stateChanged # Seg Fault Workaround
         self.ramp_speed.stateChanged.connect(self.ramp_speed_checked)
         self.ramp_speed_time.valueChanged.connect(self.ramp_speed_time_changed)
@@ -270,7 +270,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.generator = self.generators[pattern_name](
             self.sampling_rate,
             int(self.get_speed()),
-            self.get_size(),
+            self.size_edit.value(),
             self.get_shape_center()
         )
         self.height_adapter.generator = self.generator
@@ -325,10 +325,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         except ValueError:
             # Invalid value entered -- reset
             size = self.generator.size
-            self.side_edit.setText(str(size))
+            self.size_edit.setValue(size)
         if size <= 0:
             size = self.generator.size
-        self.size_edit.setText(str(size))
+        self.size_edit.setValue(size)
         return size
 
     def shape_center_x_changed(self):
