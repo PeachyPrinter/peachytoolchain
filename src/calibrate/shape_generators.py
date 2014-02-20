@@ -27,7 +27,6 @@ class PathGenerator(object):
     the class attribute PATH with a list of (x,y) vertices that define the closed path.
     """
     PATH = None
-    name = None
     def __init__(self, sampling_rate, speed, size, center):
         """
         sampling_rate -- int -- The number of points per second to draw (should match the audio sampling rate)
@@ -189,7 +188,7 @@ class ObjFileGenerator(PathGenerator):
     """
     PATH = []
 
-    def __init__(self, sampling_rate, speed, size, center,filename, xcolumn = 1, ycolumn = 2):
+    def __init__(self, sampling_rate, speed, size, center,filename = 'testdata.obj', xcolumn = 1, ycolumn = 2):
         super(ObjFileGenerator, self).__init__(sampling_rate, speed, size, center)
         try:
             obj_file = open(filename, 'r')
@@ -207,8 +206,8 @@ class ObjFileGenerator(PathGenerator):
             elif line.startswith('v'):
                 split_data = line.split(' ')
                 obj_raw_vectors = obj_raw_vectors + [(float(split_data[xcolumn]) , float(split_data[ycolumn]))]
-            elif line.startswith('f'):
-                obj_order = line.split(' ')[1:]
+            elif line.startswith('f') or line.startswith('l'):
+                obj_order = obj_order + line.split(' ')[1:][::-1]
         if (obj_name and obj_raw_vectors and obj_order):
             for pos in obj_order:
                 self.PATH = self.PATH + [ obj_raw_vectors[int(pos) -1] ]
