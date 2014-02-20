@@ -61,8 +61,8 @@ class AmplitudeModulator(Modulator):
     sampling rate."""
     AM_MINIMUM_AMPLITUDE = 0.25
     AM_MAXIMUM_AMPLITUDE = 1.00
-    AM_CARRIER_FREQ_LASER_ON = 11025.0
-    AM_CARRIER_FREQ_LASER_OFF = 11025.0/4.0
+    AM_CARRIER_FREQ_LASER_ON = 8000.0
+    AM_CARRIER_FREQ_LASER_OFF = AM_CARRIER_FREQ_LASER_ON/4.0
     NUM_CYCLES_TO_CALCULATE = 128 # The calculated modulation waveform will contain this many full cycles before repeating
 
     def __init__(self, sampling_rate):
