@@ -7,6 +7,7 @@ from testhelpers import TestHelpers
 sys.path.insert(0,os.path.join(os.path.dirname(__file__), '..', 'src', ))
 from calibrate.shape_generators import NullGenerator
 from calibrate.shape_generators import PathGenerator
+from calibrate.shape_generators import ObjFileGenerator
 
 
 class NullGeneratorTests(unittest.TestCase):
@@ -99,3 +100,43 @@ class PathGeneratorTests(unittest.TestCase,TestHelpers):
 
         results_2 = generator.nextN(3)
         self.assertNumpyArrayEquals(expected_2,results_2)
+
+class ObjFileGeneratorTests(unittest.TestCase,TestHelpers):
+    def setUp(self):
+        self.sampling_rate = 2
+        self.speed = 1.0
+        self.size = 1.0
+        self.center = (0,0)
+        self.test_data_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..','test_data')
+
+    def test_should_explode_if_no_file(self):
+        fakefile = 'woot.obj'
+        passed = False
+        try:
+            ObjFileGenerator(self.sampling_rate,self.speed,self.size,self.center,fakefile)
+        except:
+            passed = True
+        self.assertTrue(passed)
+
+    def test_should_explode_if_file_is_not_obj(self):
+        file_path = os.path.join(self.test_data_folder,'notanobj.obj')
+        passed = False
+        try:
+            ObjFileGenerator(self.sampling_rate,self.speed,self.size,self.center,file_path)
+        except:
+            passed = True
+        self.assertTrue(passed)
+
+    def test_should_load_points_for_simple_obj(self):
+        file_path = os.path.join(self.test_data_folder,'simple.obj')
+        generator = ObjFileGenerator(self.sampling_rate,self.speed,self.size,self.center,file_path)
+        
+        self.assertEquals(generator.PATH, [(-0.6,0.7),(0.4,0.7),(0.4,0.2),(-0.6,0.2)])
+        
+        expected = numpy.array( [(0.0,0.0),(-0.3,0.35),(0.2,0.35),(0.2,0.1),(-0.3,0.1),(-0.3,0.35)] )
+
+        results = generator.nextN(6)
+        self.assertNumpyArrayEquals(expected,results)
+
+
+

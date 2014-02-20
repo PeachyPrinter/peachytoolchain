@@ -1,7 +1,7 @@
 INSTALLATION 
 ==============
 
-For the purpose of early access testing
+For the purpose of early access testing and development
 
 
 Current Version
@@ -21,9 +21,16 @@ Windows
 Mac OSX
 -------------------
 
-* Download and install PySide http://pyside.markus-ullmann.de/pyside-1.2.1-qt4.8.5-py27apple-developer-signed.pkg
-* Download and install QT http://download.qt-project.org/official_releases/qt/4.8/4.8.5/qt-mac-opensource-4.8.5.dmg
-* Download and install pyaudio from http://people.csail.mit.edu/hubert/pyaudio/packages/pyaudio-0.2.7.dmg (You may have to right click and option open to install it)
+Install xcode-select
+Install Homebrew at the terminal
+    
+    ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+
+Instal latest python
+
+    brew install python
+    
+
 
 Linux (debian)
 ---------------

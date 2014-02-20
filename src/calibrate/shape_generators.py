@@ -27,6 +27,7 @@ class PathGenerator(object):
     the class attribute PATH with a list of (x,y) vertices that define the closed path.
     """
     PATH = None
+    name = None
     def __init__(self, sampling_rate, speed, size, center):
         """
         sampling_rate -- int -- The number of points per second to draw (should match the audio sampling rate)
@@ -158,13 +159,13 @@ class YlineGenerator(PathGenerator):
 
 class XlineGenerator(PathGenerator):
     """
-    Generator that creates a vertical. Useful for testing yMax.
+    Generator that creates a vertical. Useful for testing xMax.
     """
     PATH =  [(-1.0, 0.0),(0.0, 0.0), (1.0, 0.0)]
 
 class GridGenerator(PathGenerator):
     """
-    Generator that creates a vertical. Useful for testing yMax.
+    Generator that creates a grid.
     """
     PATH =  [(-1.0,-1.0)]
     width = 8
@@ -181,4 +182,36 @@ class GridGenerator(PathGenerator):
                     (current_x,current_y)]
         PATH = PATH + [(current_x,-1.0)]
     PATH =  PATH + [(-1.0,-1.0)]
+
+class ObjFileGenerator(PathGenerator):
+    """
+    Reads and ObjectFile and creates a path
+    """
+    PATH = []
+
+    def __init__(self, sampling_rate, speed, size, center,filename, xcolumn = 1, ycolumn = 2):
+        super(ObjFileGenerator, self).__init__(sampling_rate, speed, size, center)
+        try:
+            obj_file = open(filename, 'r')
+            obj_data = obj_file.readlines()
+        except Exception as ex:
+            raise Exception("obj file for path generation not found at: %s" % str(filename))
+
+        obj_name = None
+        obj_raw_vectors = []
+        obj_order = []
+
+        for line in obj_data:
+            if line.startswith('o'):
+                obj_name = line[2:]
+            elif line.startswith('v'):
+                split_data = line.split(' ')
+                obj_raw_vectors = obj_raw_vectors + [(float(split_data[xcolumn]) , float(split_data[ycolumn]))]
+            elif line.startswith('f'):
+                obj_order = line.split(' ')[1:]
+        if (obj_name and obj_raw_vectors and obj_order):
+            for pos in obj_order:
+                self.PATH = self.PATH + [ obj_raw_vectors[int(pos) -1] ]
+        else:
+            raise Exception("obj provided is incomplete or wrong format")
 
