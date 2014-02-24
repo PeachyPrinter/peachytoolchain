@@ -188,7 +188,7 @@ class ObjFileGenerator(PathGenerator):
     """
     PATH = []
 
-    def __init__(self, sampling_rate, speed, size, center,filename = 'testdata.obj', xcolumn = 1, ycolumn = 2):
+    def __init__(self, sampling_rate, speed, size, center,filename = 'testdata.obj', xcolumn = 1, ycolumn = 3):
         super(ObjFileGenerator, self).__init__(sampling_rate, speed, size, center)
         try:
             obj_file = open(filename, 'r')

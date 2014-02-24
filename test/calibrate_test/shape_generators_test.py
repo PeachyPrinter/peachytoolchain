@@ -131,9 +131,9 @@ class ObjFileGeneratorTests(unittest.TestCase,TestHelpers):
         file_path = os.path.join(self.test_data_folder,'simple.obj')
         generator = ObjFileGenerator(self.sampling_rate,self.speed,self.size,self.center,file_path)
         
-        self.assertEquals(generator.PATH, [(-0.6,0.7),(0.4,0.7),(0.4,0.2),(-0.6,0.2)])
+        self.assertEquals(generator.PATH, [(-0.6, 0.2), (0.4, 0.2), (0.4, 0.7), (-0.6, 0.7)])
         
-        expected = numpy.array( [(0.0,0.0),(-0.3,0.35),(0.2,0.35),(0.2,0.1),(-0.3,0.1),(-0.3,0.35)] )
+        expected = numpy.array( [(0.0,0.0),(-0.3, 0.1), (0.2, 0.1), (0.2, 0.35), (-0.3, 0.35), (-0.3, 0.1)] )
 
         results = generator.nextN(6)
         self.assertNumpyArrayEquals(expected,results)

@@ -26,10 +26,14 @@ Install Homebrew at the terminal
     
     ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
 
-Instal latest python
+Install latest python
 
     brew install python
+
+Install dependancies (Note this can take some time)
     
+    brew install pyside
+    brew install pyside-tools
 
 
 Linux (debian)

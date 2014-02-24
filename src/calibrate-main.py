@@ -29,7 +29,7 @@ audio.start()
 
 generators = {'Square': shape_generators.SquareGenerator,
               'Star': shape_generators.StarGenerator,
-              '0': shape_generators.NullGenerator,
+              '0 : None': shape_generators.NullGenerator,
               'Yline': shape_generators.YlineGenerator,
               'Xline': shape_generators.XlineGenerator,
               'Grid': shape_generators.GridGenerator,
