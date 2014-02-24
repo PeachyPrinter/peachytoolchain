@@ -86,14 +86,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     LASER_POWER_ON_ID = 1
     LASER_POWER_OFF_ID = 0
 
-    def __init__(self, tuning_parameter_collection, audio_server, modulator_proxy, transformer_proxy, generators,
+    def __init__(self, tuning_parameter_collection, modulator_proxy, generators,
                  height_adapter, sampling_rate):
         QtGui.QMainWindow.__init__(self)
         self.tuning_collection = tuning_parameter_collection  # The collection of all stored tuning parameters
         self.tuning_parameters = tuning_parameter_collection.tuning_parameters[0]  # The current tuning parameters
-        self.audio_server = audio_server
         self.modulator_proxy = modulator_proxy
-        self.transformer_proxy = transformer_proxy
         self.generators = generators
         self.generator = None
         self.height_adapter = height_adapter

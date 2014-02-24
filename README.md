@@ -38,7 +38,10 @@ TODO
 
 Calibration
 -----------------------
-TODO
+### Hardware Calibration
+    1.  test
+
+### Software Calibration
 
 Converting your model to gcode
 -----------------------

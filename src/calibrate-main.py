@@ -35,7 +35,7 @@ generators = {'Square': shape_generators.SquareGenerator,
               'Grid': shape_generators.GridGenerator,
               'File': shape_generators.ObjFileGenerator
               }
-mainwindow = MainWindow(tuning, audio, modulator_proxy, transformer_proxy, generators, height_adapter, SAMPLING_RATE)
+mainwindow = MainWindow(tuning, modulator_proxy, generators, height_adapter, SAMPLING_RATE)
 mainwindow.show()
 retcode = app.exec_()
 audio.stop()

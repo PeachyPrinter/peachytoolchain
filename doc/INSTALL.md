@@ -26,14 +26,12 @@ Install Homebrew at the terminal
     
     ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
 
-Install latest python
+Install dependancies at the terminal
 
-    brew install python
+    brew install python pyside pyside-tools 
+    pip install numpy
 
-Install dependancies (Note this can quite take some time)
-    
-    brew install pyside
-    brew install pyside-tools
+Install PyAudio from http://people.csail.mit.edu/hubert/pyaudio/packages/pyaudio-0.2.7.dmg  Note: you will have to right-click hold down option and click open
 
 
 Linux (debian)
