@@ -30,7 +30,7 @@ Install latest python
 
     brew install python
 
-Install dependancies (Note this can take some time)
+Install dependancies (Note this can quite take some time)
     
     brew install pyside
     brew install pyside-tools
