@@ -43,6 +43,36 @@ class DripDetectorTests(unittest.TestCase):
         self.assertEqual(drip_detector.get_height_mm(), 0)
 
     @patch('pyaudio.PyAudio')
+    def test_drip_detector_should_report_1_drips_after_1_slow_drips(self, mock_pyaudio):
+        drips_per = 1
+        wave_file = os.path.join(self.test_file_path, '1_drip.wav')
+        stream = MockPyAudioStream(wave_file)
+
+        my_mock_pyaudio = mock_pyaudio.return_value
+        my_mock_pyaudio.open.return_value = stream
+
+        drip_detector = DripDetector(1)
+        drip_detector.start()
+        time.sleep(1)
+        drip_detector.stop()
+        self.assertEqual(drip_detector.get_height_mm(), 1)
+
+    @patch('pyaudio.PyAudio')
+    def test_drip_detector_should_report_1_drips_after_1_fast_drips(self, mock_pyaudio):
+        drips_per = 1
+        wave_file = os.path.join(self.test_file_path, '1_drip_fast.wav')
+        stream = MockPyAudioStream(wave_file)
+
+        my_mock_pyaudio = mock_pyaudio.return_value
+        my_mock_pyaudio.open.return_value = stream
+
+        drip_detector = DripDetector(1)
+        drip_detector.start()
+        time.sleep(1)
+        drip_detector.stop()
+        self.assertEqual(drip_detector.get_height_mm(), 1)
+
+    @patch('pyaudio.PyAudio')
     def test_drip_detector_should_report_14_drips_after_14_drips(self, mock_pyaudio):
         drips_per = 1
         wave_file = os.path.join(self.test_file_path, '14_drips.wav')
@@ -57,6 +87,22 @@ class DripDetectorTests(unittest.TestCase):
         drip_detector.stop()
         self.assertEqual(drip_detector.get_height_mm(), 14)
 
+    # @patch('pyaudio.PyAudio')
+    # def test_drip_detector_should_report_22_drips_after_22_drips_speed_up(self, mock_pyaudio):
+    #     drips_per = 1
+    #     wave_file = os.path.join(self.test_file_path, '14_drips.wav')
+    #     stream = MockPyAudioStream(wave_file)
+
+    #     my_mock_pyaudio = mock_pyaudio.return_value
+    #     my_mock_pyaudio.open.return_value = stream
+
+    #     drip_detector = DripDetector(1)
+    #     drip_detector.start()
+    #     time.sleep(1)
+    #     drip_detector.stop()
+    #     self.assertEqual(drip_detector.get_height_mm(), 22)
+
+    #start half way through
 
 class CureRateCalibrationTests(unittest.TestCase):
     sample_rate = 44100
