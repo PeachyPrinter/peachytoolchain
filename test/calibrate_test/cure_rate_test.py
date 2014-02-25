@@ -3,9 +3,60 @@ import sys
 import os
 from mock import patch, Mock
 from testhelpers import TestHelpers
+import wave
+import pyaudio 
+import time
 
 sys.path.insert(0,os.path.join(os.path.dirname(__file__), '..', 'src', ))
-from calibrate.cure_rate import CureRateCalibrator
+from calibrate.cure_rate import CureRateCalibrator, DripDetector
+
+class MockPyAudioStream(object):
+    _read_frames = 0
+    def __init__(self, wavefile, chunk_size = 1024):
+        self._wave_data = wave.open(wavefile, 'rb')
+        self._chunk_size = chunk_size
+    
+    def read(self,frames):
+        self._read_frames += frames
+        return self._wave_data.readframes(frames)
+    def get_read_available(self):
+        possible_frames = self._wave_data.getnframes() - self._read_frames
+        if (possible_frames >= self._chunk_size):
+            return self._chunk_size
+        else:
+            return possible_frames
+    def start_stream(self):
+        pass
+    def stop_stream(self):
+        pass
+    def close(self):
+        self._wave_data.close()
+
+
+class DripDetectorTests(unittest.TestCase):
+    test_file_path = os.path.join(os.path.dirname(__file__), '..', 'test_data')
+    p = pyaudio.PyAudio()
+
+    def test_drip_detector_should_report_height_of_0_when_stopped(self):
+        drips_per = 1
+        drip_detector = DripDetector(1)
+        self.assertEqual(drip_detector.get_height_mm(), 0)
+
+    @patch('pyaudio.PyAudio')
+    def test_drip_detector_should_report_14_drips_after_14_drips(self, mock_pyaudio):
+        drips_per = 1
+        wave_file = os.path.join(self.test_file_path, '14_drips.wav')
+        stream = MockPyAudioStream(wave_file)
+
+        my_mock_pyaudio = mock_pyaudio.return_value
+        my_mock_pyaudio.open.return_value = stream
+
+        drip_detector = DripDetector(1)
+        drip_detector.start()
+        time.sleep(1)
+        drip_detector.stop()
+        self.assertEqual(drip_detector.get_height_mm(), 14)
+
 
 class CureRateCalibrationTests(unittest.TestCase):
     sample_rate = 44100
@@ -42,10 +93,10 @@ class CureRateCalibrationTests(unittest.TestCase):
         self.assertTrue(passed)
 
     @patch('audio.drip_detector.DripDetector')
-    def test_cure_rate_should_know_its_height_at_1000_drips(self, mock_DripDetector):
+    def test_cure_rate_should_send_audio_test_pattern(self, mock_DripDetector):
         mock_drip_detector = mock_DripDetector.return_value
         mock_drip_detector.num_drips = 1000
         drips_per_mm = 100
-        crc = CureRateCalibrator(mock_drip_detector, drips_per_mm)
+        crc = CureRateCalibrator(mock_drip_detector, drips_per_mm, )
 
         self.assertEquals(crc.current_height_mm(),10)
