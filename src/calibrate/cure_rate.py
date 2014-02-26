@@ -2,11 +2,9 @@ import threading
 import pyaudio
 import math
 import struct
+import time
 
 class DripDetector(threading.Thread):
-    INPUT_WAVE_RATE = 44100
-    FILTER_ON_TIME = 0.05
-    FILTER_OFF_TIME = 0.05
     MONO_WAVE_STRUCT_FMT = "h"
     MONO_WAVE_STRUCT = struct.Struct(MONO_WAVE_STRUCT_FMT)
     MAX_S16 = math.pow(2, 15)-1
@@ -14,13 +12,15 @@ class DripDetector(threading.Thread):
     _running = False
     _num_drips = 0
     _drips_per_mm = 1
-    _current_time = 0.0
-    _time_step = 1.0/INPUT_WAVE_RATE
+    _hold_samples = 0
     _indrip = False
-    _hold_time = 0.0
 
-    def __init__(self, drips_per_mm, initial_height = 0.0):
+    def __init__(self, drips_per_mm, initial_height = 0.0, sampling_frequency = 44100, threshold = 400, release_ms = 6):
         threading.Thread.__init__(self)
+        self._sampling_frequency = sampling_frequency
+        self._threshold = self.MAX_S16 - threshold
+        self._release = self._sampling_frequency / 1000 * release_ms
+
         self.set_drips_per_mm(drips_per_mm)
 
     def set_drips_per_mm(self,number_drips_per_mm):
@@ -36,9 +36,9 @@ class DripDetector(threading.Thread):
         self.instream = pa.open(
                 format=pa.get_format_from_width(2, unsigned=False),
                  channels=1,
-                 rate=self.INPUT_WAVE_RATE,
+                 rate=self._sampling_frequency,
                  input=True,
-                 frames_per_buffer=int(self.INPUT_WAVE_RATE/8)
+                 frames_per_buffer=int(self._sampling_frequency/8)
                  )
         self.instream.start_stream()
         self._running = True
@@ -51,22 +51,20 @@ class DripDetector(threading.Thread):
     def stop(self):
         self._running = False
         self.instream.stop_stream()
+        time.sleep(0.1) # Waiting for current op to compelete
         self.instream.close()
         self.join(10.0)
         if self.is_alive():
             print('WARNING: DripDetector failed to stop')
 
-    _hold_samples = 0
     def _add_frames(self, frames):
-        threshold = self.MAX_S16 - 400
         hold_samples_c = 250
 
         for offset in range(0, len(frames), self.MONO_WAVE_STRUCT.size):
             value = self.MONO_WAVE_STRUCT.unpack_from(frames, offset)[0]
-            # self._current_time += self._time_step
-            if (value >= threshold):
+            if (value >=  self._threshold):
                 self._indrip = True
-                self._hold_samples = hold_samples_c
+                self._hold_samples = self._release
             else:
                 if (self._hold_samples > 0):
                     self._hold_samples -= 1
@@ -74,31 +72,8 @@ class DripDetector(threading.Thread):
                     if (self._indrip == True ):
                         self._num_drips += 1
                         self._indrip = False
-                        self._hold_samples = hold_samples_c
-                
-            # self._num_drips += 1
+                        self._hold_samples = self._release
 
-            # if self._indrip:
-            #     if value < self.MAX_S16/8.0:
-            #         self._hold_time += self._time_step
-            #         if self._hold_time >= self.FILTER_OFF_TIME:
-            #             # End of drip
-            #             self._indrip = False
-            #             self._hold_time = 0.0
-            #     else:
-            #         # Another high in the middle of the on state
-            #         self.hold_time = 0.0
-            # else:
-            #     if value >= self.MAX_S16/8.0:
-            #         self._hold_time += self._time_step
-            #         if self._hold_time >= self.FILTER_ON_TIME:
-            #             # Drip confirmed
-            #             self._indrip = True
-            #             self._hold_time = 0.0
-            #             self._num_drips += 1
-            #     else:
-            #         # Another low while waiting for a drip
-            #         self._hold_time = 0.0
 
 class CureRateCalibrator(object):
 
