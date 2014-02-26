@@ -4,7 +4,7 @@ import math
 import struct
 
 class DripDetector(threading.Thread):
-    INPUT_WAVE_RATE = 8000
+    INPUT_WAVE_RATE = 44100
     FILTER_ON_TIME = 0.05
     FILTER_OFF_TIME = 0.05
     MONO_WAVE_STRUCT_FMT = "h"
@@ -58,18 +58,18 @@ class DripDetector(threading.Thread):
 
     _hold_samples = 0
     def _add_frames(self, frames):
-        threshold = self.MAX_S16 - 2000
-        hold_samples_c = 1000
+        threshold = self.MAX_S16 - 400
+        hold_samples_c = 250
 
         for offset in range(0, len(frames), self.MONO_WAVE_STRUCT.size):
             value = self.MONO_WAVE_STRUCT.unpack_from(frames, offset)[0]
             # self._current_time += self._time_step
-            if (self._hold_samples > 0):
-                self._hold_samples -= 1
+            if (value >= threshold):
+                self._indrip = True
+                self._hold_samples = hold_samples_c
             else:
-                if (value >= threshold):
-                   self._indrip = True
-                   self._hold_samples = hold_samples_c
+                if (self._hold_samples > 0):
+                    self._hold_samples -= 1
                 else:
                     if (self._indrip == True ):
                         self._num_drips += 1
