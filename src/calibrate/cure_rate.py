@@ -3,6 +3,7 @@ import os
 from audio.tuning_parameter_file import TuningParameterFileHandler
 
 class CureRateCalibrator(object):
+    
     def __init__(self, calibration_file):
         self.calibration_data = self.load_calibration(calibration_file)
 

@@ -113,7 +113,7 @@ class GcodeConverter:
     def loadGcode(self, gcode_filename):
         """Opens the given filename, reads the data in as ascii format, and strips all lines, returning
         a list of lines."""
-        gcode_file = open(gcode_filename, 'rt', encoding='ascii')
+        gcode_file = open(gcode_filename, 'rt')
         gcode_data = [x.strip() for x in gcode_file.readlines()]
         return gcode_data
 

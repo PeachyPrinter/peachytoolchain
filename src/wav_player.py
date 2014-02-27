@@ -17,7 +17,7 @@ TRACE = False               # If True, all cue and frame count information will 
 DEBUG_STREAM = False        # If True, will save all wave output to a file for review
 
 # Internal constants
-INPUT_WAVE_RATE = 8000
+INPUT_WAVE_RATE = 44100
 
 import pyaudio
 import time
