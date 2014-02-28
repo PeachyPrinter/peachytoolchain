@@ -26,9 +26,9 @@ def main():
         sys.exit(2)
 
     #Defaults
-    size = 10
-    start_speed = 10
-    max_speed = 500
+    size = 5
+    start_speed = 100
+    max_speed = 1000
     layers_per_unit = 100
     speed_increment = 50
     output_file = 'exposure_test.gcode'
@@ -57,8 +57,8 @@ def main():
         exit(2)
 
 
-    base_z_size = 2 #units
-    base_speed = 200
+    base_z_size = 3 #units
+    base_speed = 400
     z_layer = 1.0 / layers_per_unit * 1.0
 
     output = open(output_file,'w')
