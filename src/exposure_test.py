@@ -1,17 +1,16 @@
 import sys
 import getopt
 
-def square(speed, size):
+def square(speed, rapid_speed, size):
     data = "M101\n"
-    data = data + "G1 X%.2f Y%.2f F%.2f E1\n" % (size,size,speed)
-    data = data + "G1 X%.2f Y%.2f F%.2f E1\n" % (size,-1.0 * size,speed)
-    data = data + "G1 X%.2f Y%.2f F%.2f E1\n" % (-1.0 * size,-1.0 *size,speed)
-    data = data + "G1 X%.2f Y%.2f F%.2f E1\n" % (-1.0 * size,size,speed)
+    data = data + "G1 X%.2f Y%.2f F%.2f E0\n" % (-1.0 * size, 0.0,rapid_speed)
+    data = data + "G1 X%.2f Y%.2f F%.2f E1\n" % (1.0 * size, 0.0,speed)
+
     return data
 
-def get_layer(z, speed, size):
+def get_layer(z, speed, rapid_speed, size):
     data = 'M103\nG1 Z%.2f F%.2f\n' % (z , speed)
-    return data + square(speed, size)
+    return data + square(speed, rapid_speed, size)
 
 def usage():
     print("Usage:\npython exposure_test.py --size=(1/2 print area recommended)")
@@ -67,13 +66,13 @@ def main():
 
     # build base
     while (z < base_z_size):
-        layer = get_layer(z, base_speed, size)
+        layer = get_layer(z, base_speed, max_speed, size)
         output.write(layer)
         z = z + z_layer
 
     # build layers
     for speed in range(start_speed, max_speed, speed_increment):
-        layer = get_layer(z, base_speed, size)
+        layer = get_layer(z, base_speed, max_speed, size)
         output.write(layer)
         z = z + z_layer
 
