@@ -28,8 +28,8 @@ def main():
     size = 5
     start_speed = 100
     max_speed = 1000
-    layers_per_unit = 100
-    speed_increment = 50
+    layers_per_unit = 10
+    speed_increment = 5
     output_file = 'exposure_test.gcode'
 
     try:
@@ -72,9 +72,12 @@ def main():
 
     # build layers
     for speed in range(start_speed, max_speed, speed_increment):
-        layer = get_layer(z, base_speed, max_speed, size)
+        layer = get_layer(z, speed, max_speed, size)
         output.write(layer)
         z = z + z_layer
+
+    print("ZUnits = " + str(z))
+    output.close()
 
     print("Complete: Gcode file is located at %s" % output_file)
 
