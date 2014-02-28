@@ -2,14 +2,14 @@ import sys
 import getopt
 
 def square(speed, rapid_speed, size):
-    data = "M101\n"
-    data = data + "G1 X%.2f Y%.2f F%.2f E0\n" % (-1.0 * size, 0.0,rapid_speed)
+    data = ""
+    data = data + "G1 X%.2f Y%.2f F%.2f\n" % (-1.0 * size, 0.0,rapid_speed)
     data = data + "G1 X%.2f Y%.2f F%.2f E1\n" % (1.0 * size, 0.0,speed)
 
     return data
 
 def get_layer(z, speed, rapid_speed, size):
-    data = 'M103\nG1 Z%.2f F%.2f\n' % (z , speed)
+    data = 'G1 Z%.2f F%.2f\n' % (z , speed)
     return data + square(speed, rapid_speed, size)
 
 def usage():
@@ -62,7 +62,7 @@ def main():
 
     output = open(output_file,'w')
     #build a base
-    z = 0.0
+    z = z_layer # gcode to wave can't handle 0.0 start point
 
     # build base
     while (z < base_z_size):
