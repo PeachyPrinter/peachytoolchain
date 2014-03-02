@@ -2,7 +2,7 @@ from PySide import QtCore, QtGui
 import os.path
 import threading
 
-from .ui_mainwindow import Ui_MainWindow
+from ui_mainwindow import Ui_MainWindow
 from audio.tuning_parameter_file import TuningParameterFileHandler
 from audio.modulation import ModulationTypes, getModulator
 
