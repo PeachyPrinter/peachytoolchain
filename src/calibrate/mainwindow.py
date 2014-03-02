@@ -372,9 +372,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         return x, y
 
     def save_clicked(self):
+        file_types = "Calibration (*.dat);;All Files (*.*)"
         (filename, selected_filter) = QtGui.QFileDialog.getSaveFileName(
             self.centralwidget,  # parent
             "Save tuning parameters",  # caption
+            '',
+            file_types
         )
         if not filename:
             return
