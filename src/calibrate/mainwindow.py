@@ -91,7 +91,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     LASER_POWER_OFF_ID = 0
 
     def __init__(self, tuning_parameter_collection, modulator_proxy, generators,
-                 height_adapter, sampling_rate):
+                 height_adapter, sampling_rate, advanced = False):
         QtGui.QMainWindow.__init__(self)
         self.tuning_collection = tuning_parameter_collection  # The collection of all stored tuning parameters
         self.tuning_parameters = tuning_parameter_collection.tuning_parameters[0]  # The current tuning parameters
@@ -208,7 +208,22 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.laser_power_radioButton_On.setChecked(True)
         self.tuning_parameters = self.tuning_collection.get_tuning_parameters_for_height(0.0)
         self.calibration_selection_changed(None,None)
-        
+
+        if (not advanced):
+            self.ramp_speed.setHidden(True)
+            self.ramp_speed_time.setHidden(True)
+            self.run_ramp_label.setHidden(True)
+            self.ramp_speed_label.setHidden(True)
+            self.dwell_unit_label.setHidden(True)
+            self.dwell_position_label.setHidden(True)
+            self.dwell_x_edit.setHidden(True)
+            self.dwell_y_edit.setHidden(True)
+            self.rotation_label.setHidden(True)
+            self.rotation_spin.setHidden(True)
+            self.y_offset_spin.setHidden(True)
+            self.x_offset_spin.setHidden(True)
+            self.x_offset_label.setHidden(True)
+            self.y_offset_label.setHidden(True)
         
 
     def make_edit_signal_handler(self, edit, container, var_name, validator=None, after=None):

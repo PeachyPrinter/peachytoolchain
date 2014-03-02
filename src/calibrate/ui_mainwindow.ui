@@ -26,7 +26,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout">
            <item row="3" column="0">
-            <widget class="QLabel" name="label_36">
+            <widget class="QLabel" name="dwell_position_label">
              <property name="text">
               <string>Dwell position</string>
              </property>
@@ -68,7 +68,7 @@
             </widget>
            </item>
            <item row="3" column="3">
-            <widget class="QLabel" name="label_37">
+            <widget class="QLabel" name="dwell_unit_label">
              <property name="text">
               <string>units</string>
              </property>
@@ -252,38 +252,8 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_25">
-             <property name="text">
-              <string>Ramp Time</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QDoubleSpinBox" name="ramp_speed_time">
-             <property name="minimum">
-              <double>0.000000000000000</double>
-             </property>
-             <property name="maximum">
-              <double>10.000000000000000</double>
-             </property>
-             <property name="singleStep">
-              <double>0.010000000000000</double>
-             </property>
-             <property name="value">
-              <double>1.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="2">
-            <widget class="QLabel" name="label_25">
-             <property name="text">
-              <string>Run Ramp</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="label_25">
+            <widget class="QLabel" name="laser_power_label">
              <property name="text">
               <string>Laser power</string>
              </property>
@@ -362,13 +332,6 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="3">
-            <widget class="QCheckBox" name="ramp_speed">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
            <item row="5" column="1">
             <widget class="QSpinBox" name="size_edit">
              <property name="minimum">
@@ -379,10 +342,50 @@
              </property>
             </widget>
            </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="ramp_speed_label">
+             <property name="text">
+              <string>Ramp Time</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QDoubleSpinBox" name="ramp_speed_time">
+             <property name="minimum">
+              <double>0.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>10.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QLabel" name="run_ramp_label">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Run Ramp</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3">
+            <widget class="QCheckBox" name="ramp_speed">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
           </layout>
           <zorder>ramp_speed_time</zorder>
-          <zorder>label_25</zorder>
-          <zorder>label_25</zorder>
+          <zorder>ramp_speed_label</zorder>
+          <zorder>run_ramp_label</zorder>
           <zorder>label_8</zorder>
           <zorder>pattern_combobox</zorder>
           <zorder>label_9</zorder>
@@ -391,7 +394,7 @@
           <zorder>label_16</zorder>
           <zorder>label_21</zorder>
           <zorder>shape_center_y_edit</zorder>
-          <zorder>label_25</zorder>
+          <zorder>laser_power_label</zorder>
           <zorder>laser_power_radioButton_On</zorder>
           <zorder>laser_power_radioButton_Off</zorder>
           <zorder>label_38</zorder>
@@ -503,7 +506,7 @@
               </property>
               <layout class="QGridLayout" name="gridLayout_2">
                <item row="0" column="0">
-                <widget class="QLabel" name="label">
+                <widget class="QLabel" name="x_offset_label">
                  <property name="text">
                   <string>X offset</string>
                  </property>
@@ -526,7 +529,7 @@
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="label_2">
+                <widget class="QLabel" name="y_offset_label">
                  <property name="text">
                   <string>Y offset</string>
                  </property>
@@ -549,7 +552,7 @@
                 </widget>
                </item>
                <item row="2" column="0">
-                <widget class="QLabel" name="label_3">
+                <widget class="QLabel" name="rotation_label">
                  <property name="text">
                   <string>Rotation</string>
                  </property>
