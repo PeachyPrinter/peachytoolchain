@@ -4,8 +4,6 @@ import sys
 import select
 import time
 import os
-import termios
-import fcntl
 
 from calibrate.drip_detector import DripDetector
 
@@ -22,7 +20,7 @@ class _Getch:
 
 class _GetchUnix:
     def __init__(self):
-        import tty, sys
+        import tty
 
     def __call__(self):
         import sys, tty, termios
