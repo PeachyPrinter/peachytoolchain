@@ -57,7 +57,7 @@ def main():
 
 
     base_z_size = 3 #units
-    base_speed = 400
+    base_speed = start_speed + ((max_speed - start_speed) / 2)
     z_layer = 1.0 / layers_per_unit * 1.0
 
     output = open(output_file,'w')
