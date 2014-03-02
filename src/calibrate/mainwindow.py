@@ -70,10 +70,14 @@ class TuningParameterListModel(QtCore.QAbstractListModel):
         del self._collection.tuning_parameters[row]
         self.endRemoveRows()
 
-    def addRow(self, tp):
+    def addRow(self, new_tuning_parameters):
+        if len([tp for tp in self._collection.tuning_parameters if tp.height == new_tuning_parameters.height]) > 0:
+            print("Cannot add row to Tuning Parameters that already exists")
+            return False
+
         num_rows = self.rowCount()
         self.beginInsertRows(QtCore.QModelIndex(), num_rows, num_rows)
-        self._collection.tuning_parameters.append(tp)
+        self._collection.tuning_parameters.append(new_tuning_parameters)
         self.endInsertRows()
 
 
@@ -203,6 +207,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.modulation_radioButton_AM.setChecked(True)
         self.laser_power_radioButton_On.setChecked(True)
         self.tuning_parameters = self.tuning_collection.get_tuning_parameters_for_height(0.0)
+        self.calibration_selection_changed(None,None)
         
         
 
