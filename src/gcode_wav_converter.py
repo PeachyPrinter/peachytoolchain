@@ -72,6 +72,7 @@ class GcodeConverter:
         self.warned_once_codes = set()  # The set of codes that we have already warned the user are not supported.
         self.transformer = None
         self.modulator = None
+        self.warnings = []
 
     def convertGcode(self, gcode_filename, wave_filename, cue_filename):
         self.transformer = self.createTransformer(self.tuning_collection)
@@ -90,7 +91,11 @@ class GcodeConverter:
                 print("Processing line %d of %d (%d%%)" % (
                     state.current_line_num+1, num_lines, int(math.ceil(100.0*(state.current_line_num+1)/num_lines))))
             if line:
-                self.processGcodeInstruction(line, wave_file, cue_file, state)
+                try:
+                    self.processGcodeInstruction(line, wave_file, cue_file, state)
+                except Exception:
+                    print("Error processing line number %d" % state.current_line_num)
+                    raise
             state.current_line_num += 1
 
     def createTransformer(self, tuning_collection):
@@ -206,7 +211,9 @@ class GcodeConverter:
             self.moveLateral(x_pos, y_pos, state, wave_file, extrude, rapid=False)
         if z_pos is not None and z_pos != state.z_pos:
             if x_pos is not None or y_pos is not None:
-                print('WARNING: Simultaneous lateral and vertical movements are not supported. Movements will be separated.')
+                if not 'lateralwarning' in self.warnings:
+                    self.warnings.append('lateralwarning')
+                    print('WARNING: Simultaneous lateral and vertical movements are not supported. Movements will be separated.')
             # A new layer height has been requested. Move there last so that new layer "starts" at end of this command.
             self.moveToNewLayerHeight(z_pos, state, wave_file, cue_file)
 
