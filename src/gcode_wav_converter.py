@@ -188,12 +188,16 @@ class GcodeConverter:
         if feed_rate is not None:
             # Check for validity of feed rate
             if feed_rate > self.tuning_collection.velocity_x_max:
-                print("WARNING: Requested feed rate %f mm/second exceeds maximum machine X axis velocity of %f mm/second. "
+                if not 'feed_rate_x' in self.warnings:
+                    print("WARNING: Requested feed rate %f mm/second exceeds maximum machine X axis velocity of %f mm/second. "
                       "Clipping to maximum." % (feed_rate, self.tuning_collection.velocity_x_max))
+                    self.warnings.append('feed_rate_x')
                 feed_rate = self.tuning_collection.velocity_x_max
             if feed_rate > self.tuning_collection.velocity_y_max:
-                print("WARNING: Requested feed rate %f mm/second exceeds maximum machine Y axis velocity of %f mm/second. "
-                      "Clipping to maximum." % (feed_rate, self.tuning_collection.velocity_y_max))
+                if not 'feed_rate_y' in self.warnings:
+                    print("WARNING: Requested feed rate %f mm/second exceeds maximum machine Y axis velocity of %f mm/second. "
+                        "Clipping to maximum." % (feed_rate, self.tuning_collection.velocity_y_max))
+                    self.warnings.append('feed_rate_y')
                 feed_rate = self.tuning_collection.velocity_y_max
             state.feed_rate = feed_rate
 
