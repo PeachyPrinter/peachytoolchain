@@ -31,6 +31,14 @@ import wave
 import cue_file as cue_file_mod
 from audio.drip_detector import DripDetector, VirtualDripDetector
 from audio.tuning_parameter_file import TuningParameterFileHandler
+from util.logging import Logging
+
+if TRACE:
+    log_level = 'TRACE'
+else:
+    log_level = 'INFO'
+
+log = Logging(level=log_level)
 
 # Parse command line arguments
 if len(sys.argv) != 4:
@@ -44,10 +52,10 @@ tuning_collection = TuningParameterFileHandler.read_from_file(tuning_filename)
 # Open the wave file
 wave_file = wave.open(wave_file_name, 'rb')
 if not wave_file.getnchannels() == 2:
-    print("Error: wave file must be in stereo (2 channels)")
+    log.error("Error: wave file must be in stereo (2 channels)")
     sys.exit(1)
 if not wave_file.getsampwidth() == 2:
-    print("Error: wave file must be 16-bit")
+    log.error("Error: wave file must be 16-bit")
     sys.exit(1)
 wave_rate = wave_file.getframerate()
 
@@ -93,7 +101,7 @@ if DEBUG_STREAM:
     debug_outfile.setsampwidth(2)
 
 ## Main loop for recording/playback
-print('Playing %d cues...' % len(cues))
+log.info('Playing %d cues...' % len(cues))
 try:
     while True:
         # Process audio input
@@ -141,6 +149,7 @@ try:
                     current_frame_num = current_cue.start_frame
                     wave_pos = frame_position_cache[current_frame_num]
                     wave_file.setpos(wave_pos)
+                    log.info("Waiting for drips")
                 else:
                     # Advance to next cue
                     current_cue_index += 1
@@ -148,7 +157,7 @@ try:
                         # We've reached the end and can now exit
                         raise StopIteration('Reached end of cue list')
                     current_cue = cues[current_cue_index]
-                    print('Playing cue %d of %d (%2.1f%%)' % (
+                    log.info('Playing cue %d of %d (%2.1f%%)' % (
                         current_cue_index+1, len(cues), 100.0*float(current_cue_index+1)/float(len(cues))
                     ))
                     if DEBUG:
@@ -180,7 +189,7 @@ try:
                     frame_position_cache[current_frame_num] = wave_file.tell()
                 # NOTE: Don't read and play frames yet; will be handled when loop continues
 except StopIteration:
-    print('Finished playing final cue; waiting for playback to complete.')
+    log.info('Finished playing final cue; waiting for playback to complete.')
 finally:
     # Stop audio interface
     outstream.stop_stream()
