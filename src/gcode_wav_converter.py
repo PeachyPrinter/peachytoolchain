@@ -175,7 +175,7 @@ class GcodeConverter:
             elif param.startswith('Z'):
                 z_pos = float(param[1:])
             elif param.startswith('F'):
-                feed_rate = float(param[1:]) / 60.0
+                feed_rate = float(param[1:]) / 100.0 # this is the scale differnce
             elif param.startswith('E'):
                 # The length of extrudate
                 # HACK: We can't control amount of extrudate, but we use this to determine if extruding was
