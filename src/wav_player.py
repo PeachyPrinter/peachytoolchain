@@ -151,6 +151,8 @@ try:
                     wave_file.setpos(wave_pos)
                     log.info("Waiting for drips")
                 else:
+                    if (current_cue.cue_type == cue_file_mod.CueTypes.LOOP_UNTIL_HEIGHT and current_height > current_cue.until_height):
+                        log.warning("Dripping Too Fast")
                     # Advance to next cue
                     current_cue_index += 1
                     if current_cue_index >= len(cues):
