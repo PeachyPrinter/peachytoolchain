@@ -6,6 +6,7 @@ class Logging(object):
     _levels = [] 
 
     def __init__(self, level = 'default'):
+        level = level.lower()
         if level == 'default':
             if os.environ['LOG_LEVEL']:
                 level = os.environ['LOG_LEVEL']

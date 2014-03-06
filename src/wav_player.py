@@ -152,7 +152,10 @@ try:
                     log.info("Waiting for drips")
                 else:
                     if (current_cue.cue_type == cue_file_mod.CueTypes.LOOP_UNTIL_HEIGHT and current_height > current_cue.until_height):
-                        log.warning("Dripping Too Fast")
+                        # log.warning("Dripping Too Fast Current: %s Cue: %s ahead by:  %.2f" % (current_height, current_cue.until_height, (current_height - current_cue.until_height)))
+                        ahead_by_mm = current_height - current_cue.until_height
+                        ahead_by_drips = int(ahead_by_mm * tuning_collection.drips_per_height)
+                        log.warning('Too fast: '+'-' * ahead_by_drips + "> %d drips ahead" % ahead_by_drips)
                     # Advance to next cue
                     current_cue_index += 1
                     if current_cue_index >= len(cues):
