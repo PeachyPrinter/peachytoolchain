@@ -10,6 +10,7 @@ from util.logging import Logging
 class TuningParameterListModel(QtCore.QAbstractListModel, Logging):
     def __init__(self, tuning_parameter_collection):
         QtCore.QAbstractListModel.__init__(self)
+        Logging.__init__(self)
         self._collection = tuning_parameter_collection
 
     def rowCount(self, parent=QtCore.QModelIndex()):
@@ -93,6 +94,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, Logging):
     def __init__(self, tuning_parameter_collection, modulator_proxy, generators,
                  height_adapter, sampling_rate, advanced = False):
         QtGui.QMainWindow.__init__(self)
+        Logging.__init__(self)
 
         self.tuning_collection = tuning_parameter_collection  # The collection of all stored tuning parameters
         # self.tuning_parameters = tuning_parameter_collection.tuning_parameters[0]  # The current tuning parameters

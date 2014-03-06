@@ -7,9 +7,12 @@ class Logging(object):
 
     def __init__(self, level = 'default'):
         if level == 'default':
-            level = os.getenv('LOG_LEVEL', 'warning')
+            if os.environ['LOG_LEVEL']:
+                level = os.environ['LOG_LEVEL']
+            else:
+                level = 'warning'
         if level not in self.LEVELS:
-            raise Exception("Logging level of % invalid use: %s" % (level, self.LEVELS))
+            raise Exception("Logging level of %s invalid use: %s" % (level, self.LEVELS))
         self._levels = self.LEVELS[self.LEVELS.index(level):]
 
     def trace(self, statement):
@@ -28,7 +31,7 @@ class Logging(object):
         self._log('ERROR', statement)
 
     def _log(self, level, statement):
-        if level in self._levels:
+        if level.lower() in self._levels:
             print('%s - %s: %s' % ( self._now(), level, statement) )
 
     def _now(self):

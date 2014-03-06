@@ -2,6 +2,7 @@
 from PySide import QtGui
 import sys
 import traceback
+import os
 
 from audio.audio_server import AudioServer
 from audio.transform import PositionToAudioTransformer
@@ -13,6 +14,7 @@ from calibrate.plane_2d_to_3d_adapter import Plane2dTo3dAdapter
 from calibrate.transformer_proxy import PositionToAudioTransformerProxy
 from calibrate.modulator_proxy import ModulatorProxy
 
+os.environ['LOG_LEVEL'] = 'warning'
 SAMPLING_RATE = 44100
 
 app = QtGui.QApplication(sys.argv)
