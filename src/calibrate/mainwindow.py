@@ -5,9 +5,9 @@ import threading
 from ui_mainwindow import Ui_MainWindow
 from audio.tuning_parameter_file import TuningParameterFileHandler
 from audio.modulation import ModulationTypes, getModulator
+from util.logging import Logging
 
-
-class TuningParameterListModel(QtCore.QAbstractListModel):
+class TuningParameterListModel(QtCore.QAbstractListModel, Logging):
     def __init__(self, tuning_parameter_collection):
         QtCore.QAbstractListModel.__init__(self)
         self._collection = tuning_parameter_collection
@@ -72,7 +72,7 @@ class TuningParameterListModel(QtCore.QAbstractListModel):
 
     def addRow(self, new_tuning_parameters):
         if len([tp for tp in self._collection.tuning_parameters if tp.height == new_tuning_parameters.height]) > 0:
-            print("Cannot add row to Tuning Parameters that already exists")
+            self.warning("Cannot add row to Tuning Parameters that already exists")
             return False
 
         num_rows = self.rowCount()
@@ -81,7 +81,7 @@ class TuningParameterListModel(QtCore.QAbstractListModel):
         self.endInsertRows()
 
 
-class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
+class MainWindow(QtGui.QMainWindow, Ui_MainWindow, Logging):
     CALIBRATE_MODE = 0
     TEST_MODE = 1
     MODULATION_TYPE_BY_ID = {1: ModulationTypes.AM,
@@ -93,8 +93,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self, tuning_parameter_collection, modulator_proxy, generators,
                  height_adapter, sampling_rate, advanced = False):
         QtGui.QMainWindow.__init__(self)
+
         self.tuning_collection = tuning_parameter_collection  # The collection of all stored tuning parameters
-        self.tuning_parameters = tuning_parameter_collection.tuning_parameters[0]  # The current tuning parameters
+        # self.tuning_parameters = tuning_parameter_collection.tuning_parameters[0]  # The current tuning parameters
         self.modulator_proxy = modulator_proxy
         self.generators = generators
         self.generator = None
@@ -108,10 +109,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # NOTE: Have to manually add button group because pyside-uic fails to compile them
         self.modulation_buttonGroup = QtGui.QButtonGroup(self)
         self.modulation_buttonGroup.setExclusive(True)
-        self.modulation_buttonGroup.addButton(self.modulation_radioButton_AM,
-                                              self.MODULATION_ID_BY_TYPE[ModulationTypes.AM])
-        self.modulation_buttonGroup.addButton(self.modulation_radioButton_DC,
-                                              self.MODULATION_ID_BY_TYPE[ModulationTypes.DC])
+        self.modulation_buttonGroup.addButton(self.modulation_radioButton_AM, self.MODULATION_ID_BY_TYPE[ModulationTypes.AM])
+        self.modulation_buttonGroup.addButton(self.modulation_radioButton_DC, self.MODULATION_ID_BY_TYPE[ModulationTypes.DC])
         self.laser_power_buttonGroup = QtGui.QButtonGroup(self)
         self.laser_power_buttonGroup.setExclusive(True)
         self.laser_power_buttonGroup.addButton(self.laser_power_radioButton_On, self.LASER_POWER_ON_ID)
@@ -122,41 +121,37 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.calibrations_list_model = TuningParameterListModel(self.tuning_collection)
         # Set model now so selection model will be ready for signal creation
         self.calibrations_listview.setModel(self.calibrations_list_model)
+        
+        self.test_height_edit.setText(str(self.test_height))
+        self.calibrate_test_tab_widget.setCurrentWidget(self.calibrate_test_tab_widget.widget(self.calibrate_test_mode))
+        self.update_build_parameters()
+        index = self.calibrations_list_model.index(0)
+        self.calibrations_listview.setCurrentIndex(index)
+        
+        # Wait until after connecting signals to connect this model so that signals fire
+        self.pattern_combobox.setModel(self.generator_list_model)
+        self.pattern_combobox.setCurrentIndex(0)
+        self.modulation_radioButton_AM.setChecked(True)
+        self.laser_power_radioButton_On.setChecked(True)
 
-        self.build_x_min_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.build_x_min_edit, self.tuning_collection, 'build_x_min')
-        )
-        self.build_y_min_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.build_y_min_edit, self.tuning_collection, 'build_y_min')
-        )
-        self.build_x_max_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.build_x_max_edit, self.tuning_collection, 'build_x_max')
-        )
-        self.build_y_max_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.build_y_max_edit, self.tuning_collection, 'build_y_max')
-        )
-        self.dwell_x_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.dwell_x_edit, self.tuning_collection, 'dwell_x')
-        )
-        self.dwell_y_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.dwell_y_edit, self.tuning_collection, 'dwell_y')
-        )
-        self.velocity_x_max_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.velocity_x_max_edit, self.tuning_collection, 'velocity_x_max',
-                                      lambda x: x > 0)
-        )
-        self.velocity_y_max_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.velocity_y_max_edit, self.tuning_collection, 'velocity_y_max',
-                                      lambda x: x > 0)
-        )
-        self.drips_per_height_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.drips_per_height_edit, self.tuning_collection, 'drips_per_height',
-                                      lambda x: x > 0)
-        )
-        self.sublayer_height_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.sublayer_height_edit, self.tuning_collection, 'sublayer_height',
-                                      lambda x: x > 0)
-        )
+        self._add_tuning_parameters(0.0)
+        self.connect_ui_elements()
+
+        if (not advanced):
+            self.hide_advanced_ui()
+
+
+    def connect_ui_elements(self):
+        self.build_x_min_edit.editingFinished.connect(self.make_edit_signal_handler(self.build_x_min_edit, self.tuning_collection, 'build_x_min'))
+        self.build_y_min_edit.editingFinished.connect(self.make_edit_signal_handler(self.build_y_min_edit, self.tuning_collection, 'build_y_min'))
+        self.build_x_max_edit.editingFinished.connect(self.make_edit_signal_handler(self.build_x_max_edit, self.tuning_collection, 'build_x_max'))
+        self.build_y_max_edit.editingFinished.connect(self.make_edit_signal_handler(self.build_y_max_edit, self.tuning_collection, 'build_y_max'))
+        self.dwell_x_edit.editingFinished.connect(self.make_edit_signal_handler(self.dwell_x_edit, self.tuning_collection, 'dwell_x'))
+        self.dwell_y_edit.editingFinished.connect(self.make_edit_signal_handler(self.dwell_y_edit, self.tuning_collection, 'dwell_y'))
+        self.velocity_x_max_edit.editingFinished.connect(self.make_edit_signal_handler(self.velocity_x_max_edit, self.tuning_collection, 'velocity_x_max', lambda x: x > 0))
+        self.velocity_y_max_edit.editingFinished.connect(self.make_edit_signal_handler(self.velocity_y_max_edit, self.tuning_collection, 'velocity_y_max', lambda x: x > 0))
+        self.drips_per_height_edit.editingFinished.connect(self.make_edit_signal_handler(self.drips_per_height_edit, self.tuning_collection, 'drips_per_height', lambda x: x > 0))
+        self.sublayer_height_edit.editingFinished.connect(self.make_edit_signal_handler(self.sublayer_height_edit, self.tuning_collection, 'sublayer_height', lambda x: x > 0))
 
         self.x_offset_spin.valueChanged.connect(self.x_offset_changed)
         self.y_offset_spin.valueChanged.connect(self.y_offset_changed)
@@ -186,44 +181,31 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.delete_calibration_button.pressed.connect(self.delete_calibration_pressed)
         self.calibrate_here_button.pressed.connect(self.calibrate_here_pressed)
         self.calibrate_test_tab_widget.currentChanged.connect(self.calibrate_test_tab_changed)
-        self.test_height_edit.editingFinished.connect(
-            self.make_edit_signal_handler(self.test_height_edit, self, 'test_height', lambda x: x>=0,
-                                      self.update_height_adapter)
-        )
+        self.test_height_edit.editingFinished.connect(self.make_edit_signal_handler(self.test_height_edit, self, 'test_height', lambda x: x>=0, self.update_height_adapter))
         #noinspection PyUnresolvedReferences
         self.modulation_buttonGroup.buttonClicked[int].connect(self.modulation_changed)
         #noinspection PyUnresolvedReferences
         self.laser_power_buttonGroup.buttonClicked[int].connect(self.laser_power_changed)
 
-        self.test_height_edit.setText(str(self.test_height))
-        self.calibrate_test_tab_widget.setCurrentWidget(self.calibrate_test_tab_widget.widget(self.calibrate_test_mode))
-        self.update_build_parameters()
-        index = self.calibrations_list_model.index(0)
-        self.calibrations_listview.setCurrentIndex(index)
-        self.update_values_from_tuning_parameters()
-        # Wait until after connecting signals to connect this model so that signals fire
-        self.pattern_combobox.setModel(self.generator_list_model)
-        self.pattern_combobox.setCurrentIndex(0)
-        self.modulation_radioButton_AM.setChecked(True)
-        self.laser_power_radioButton_On.setChecked(True)
-        self.tuning_parameters = self.tuning_collection.get_tuning_parameters_for_height(0.0)
-        self.calibration_selection_changed(None,None)
 
-        if (not advanced):
-            self.ramp_speed.setHidden(True)
-            self.ramp_speed_time.setHidden(True)
-            self.run_ramp_label.setHidden(True)
-            self.ramp_speed_label.setHidden(True)
-            self.dwell_unit_label.setHidden(True)
-            self.dwell_position_label.setHidden(True)
-            self.dwell_x_edit.setHidden(True)
-            self.dwell_y_edit.setHidden(True)
-            self.rotation_label.setHidden(True)
-            self.rotation_spin.setHidden(True)
-            self.y_offset_spin.setHidden(True)
-            self.x_offset_spin.setHidden(True)
-            self.x_offset_label.setHidden(True)
-            self.y_offset_label.setHidden(True)
+    def hide_advanced_ui(self):
+        self.ramp_speed.setHidden(True)
+        self.ramp_speed_time.setHidden(True)
+        self.run_ramp_label.setHidden(True)
+        self.ramp_speed_label.setHidden(True)
+        self.dwell_unit_label.setHidden(True)
+        self.dwell_position_label.setHidden(True)
+        self.dwell_x_edit.setHidden(True)
+        self.dwell_y_edit.setHidden(True)
+        self.rotation_label.setHidden(True)
+        self.rotation_spin.setHidden(True)
+        self.y_offset_spin.setHidden(True)
+        self.x_offset_spin.setHidden(True)
+        self.x_offset_label.setHidden(True)
+        self.y_offset_label.setHidden(True)
+        self.modulation_radioButton_AM.setHidden(True)
+        self.modulation_radioButton_DC.setHidden(True)
+        self.modulation_label.setHidden(True)
         
 
     def make_edit_signal_handler(self, edit, container, var_name, validator=None, after=None):
@@ -450,9 +432,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     #noinspection PyUnusedLocal
     def calibration_selection_changed(self, selected, deselected):
+        self.debug("calibration_selection_changed")
         index = self.get_selected_calibration_index()
         tp = self.calibrations_list_model.data(index, role=QtCore.Qt.UserRole)
-        self.tuning_parameters = tp
+        self.debug("Tuning Parameters Height: %s" % str(tp.height))
+        self.tuning_parameters = self.tuning_collection.get_tuning_parameters_for_height(tp.height)
         self.update_values_from_tuning_parameters()
         self.update_height_adapter()
         self.delete_calibration_button.setEnabled(self.calibrations_list_model.rowCount() > 1)
@@ -494,13 +478,17 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             )
             dialog.exec_()
             return
-        tp = self.tuning_collection.get_tuning_parameters_for_height(height)
-        self.calibrations_list_model.addRow(tp)
+        self._add_tuning_parameters(height)
         self.calibrations_listview.selectionModel().select(
             self.calibrations_list_model.index(self.calibrations_list_model.rowCount()-1, 0, QtCore.QModelIndex()),
             QtGui.QItemSelectionModel.ClearAndSelect
         )
         # Selection causes update of current tuning parameters as a side-effect, so no need to do it explicitly here
+
+    def _add_tuning_parameters(self, height):
+        tp = self.tuning_collection.get_tuning_parameters_for_height(height)
+        self.calibrations_list_model.addRow(tp)
+        self.tuning_parameters = tp
 
     def delete_calibration_pressed(self):
         dialog = QtGui.QMessageBox(

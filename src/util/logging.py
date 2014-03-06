@@ -1,12 +1,22 @@
 import datetime
+import os
 
 class Logging(object):
-    levels = ['trace', 'info', 'warning','error' ] 
+    LEVELS =  ['trace', 'debug', 'info', 'warning','error' ] 
+    _levels = [] 
 
-    def __init__(self, level = "error"):
-        self.level = level.lower()
-        if self.level not in self.levels:
-            raise Exception("Logging level of % invalid use: %s" % (level, levels))
+    def __init__(self, level = 'default'):
+        if level == 'default':
+            level = os.getenv('LOG_LEVEL', 'warning')
+        if level not in self.LEVELS:
+            raise Exception("Logging level of % invalid use: %s" % (level, self.LEVELS))
+        self._levels = self.LEVELS[self.LEVELS.index(level):]
+
+    def trace(self, statement):
+        self._log("TRACE", statement)
+
+    def debug(self, statement):
+        self._log("DEBUG", statement)
 
     def info(self, statement):
         self._log('INFO', statement)
@@ -17,11 +27,9 @@ class Logging(object):
     def error(self, statement):
         self._log('ERROR', statement)
 
-    def trace(self, statement):
-        self._log("TRACE", statement)
-
     def _log(self, level, statement):
-        print('%s - %s: %s' % ( self._now(), level, statement) )
+        if level in self._levels:
+            print('%s - %s: %s' % ( self._now(), level, statement) )
 
     def _now(self):
         return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')

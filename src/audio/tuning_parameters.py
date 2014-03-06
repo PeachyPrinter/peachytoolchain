@@ -18,7 +18,7 @@ class TuningParameterCollection(object):
     modulation = ModulationTypes.AM
 
     def __init__(self):
-        self.tuning_parameters = [TuningParameters(),]
+        self.tuning_parameters = [ ]
         self._cached_tuning_parameters = None
         self._cached_height = None
 

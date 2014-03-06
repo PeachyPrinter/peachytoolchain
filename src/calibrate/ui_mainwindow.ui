@@ -194,7 +194,7 @@
             </widget>
            </item>
            <item row="7" column="0">
-            <widget class="QLabel" name="label_24">
+            <widget class="QLabel" name="modulation_label">
              <property name="text">
               <string>Modulation</string>
              </property>

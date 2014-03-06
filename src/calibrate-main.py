@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from PySide import QtGui
 import sys
+import traceback
 
 from audio.audio_server import AudioServer
 from audio.transform import PositionToAudioTransformer
@@ -35,8 +36,16 @@ generators = {'Square': shape_generators.SquareGenerator,
               'Grid': shape_generators.GridGenerator,
               'File': shape_generators.ObjFileGenerator
               }
-mainwindow = MainWindow(tuning, modulator_proxy, generators, height_adapter, SAMPLING_RATE)
-mainwindow.show()
-retcode = app.exec_()
-audio.stop()
-sys.exit(retcode)
+retcode = 777
+try:
+    mainwindow = MainWindow(tuning, modulator_proxy, generators, height_adapter, SAMPLING_RATE)
+    mainwindow.show()
+    retcode = app.exec_()
+except Exception as ex:
+    print(ex.message)
+    traceback.print_exc()
+    retcode = 888
+    raise ex 
+finally:
+    audio.stop()
+    sys.exit(retcode)
