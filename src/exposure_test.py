@@ -3,8 +3,9 @@ import getopt
 
 def square(speed, rapid_speed, size):
     data = ""
-    data = data + "G1 X%.2f Y%.2f F%.2f\n" % (-1.0 * size, 0.0,rapid_speed)
-    data = data + "G1 X%.2f Y%.2f F%.2f E1\n" % (1.0 * size, 0.0,speed)
+    data = data + "G1 X%.2f Y%.2f F%.2f\n" % (-1.0 * size, -1.0 * size,rapid_speed)
+    data = data + "G1 X%.2f Y%.2f F%.2f E1\n" % (1.0 * size, -1.0 * size,speed)
+    data = data + "G1 X%.2f Y%.2f F%.2f E1\n" % (1.0 * size, 1.0 * size, speed)
 
     return data
 
