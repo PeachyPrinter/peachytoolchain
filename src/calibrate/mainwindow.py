@@ -137,17 +137,19 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, Logging):
         self.laser_power_radioButton_On.setChecked(True)
 
         self._add_tuning_parameters(0.0)
+        self.set_initial_generator()
         self.connect_ui_elements()
 
         if (not advanced):
             self.hide_advanced_ui()
 
+    def set_initial_generator(self):
+        self.pattern_changed(0)
+
 
     def connect_ui_elements(self):
-        self.build_x_min_edit.editingFinished.connect(self.make_edit_signal_handler(self.build_x_min_edit, self.tuning_collection, 'build_x_min'))
-        self.build_y_min_edit.editingFinished.connect(self.make_edit_signal_handler(self.build_y_min_edit, self.tuning_collection, 'build_y_min'))
-        self.build_x_max_edit.editingFinished.connect(self.make_edit_signal_handler(self.build_x_max_edit, self.tuning_collection, 'build_x_max'))
-        self.build_y_max_edit.editingFinished.connect(self.make_edit_signal_handler(self.build_y_max_edit, self.tuning_collection, 'build_y_max'))
+        self.build_x_max_edit.editingFinished.connect(self.x_max_changed)
+        self.build_y_max_edit.editingFinished.connect(self.y_max_changed)
         self.dwell_x_edit.editingFinished.connect(self.make_edit_signal_handler(self.dwell_x_edit, self.tuning_collection, 'dwell_x'))
         self.dwell_y_edit.editingFinished.connect(self.make_edit_signal_handler(self.dwell_y_edit, self.tuning_collection, 'dwell_y'))
         self.velocity_x_max_edit.editingFinished.connect(self.make_edit_signal_handler(self.velocity_x_max_edit, self.tuning_collection, 'velocity_x_max', lambda x: x > 0))
@@ -236,6 +238,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, Logging):
         edit.setText(text)
         if after:
             after()
+
+    # ------------------Machine Settings-----------------------
+
+    def x_max_changed(self):
+        self._parse_edit_as_float(self.build_x_max_edit, self.tuning_collection, 'build_x_max')
+        self.tuning_collection.build_x_min = self.tuning_collection.build_x_max * -1.0
+        self.build_x_min_edit.setText(str(self.tuning_collection.build_x_min))
+
+    def y_max_changed(self):
+        self._parse_edit_as_float(self.build_y_max_edit, self.tuning_collection, 'build_y_max')
+        self.tuning_collection.build_y_min = self.tuning_collection.build_y_max * -1.0
+        self.build_y_min_edit.setText(str(self.tuning_collection.build_y_min))
+
+
+    # -------------------Tunning by height----------------------
 
     def x_offset_changed(self, value):
         self.tuning_parameters.x_offset = value

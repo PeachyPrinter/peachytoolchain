@@ -86,7 +86,7 @@ class AmplitudeModulator(Modulator):
         self._current_cycle = 0
 
     def _modulated_value_in_limits(self, modulated_values):
-        return numpy.all(modulated_values < self.AM_MAXIMUM_AMPLITUDE) and numpy.all(modulated_values > self.AM_MINIMUM_AMPLITUDE)
+        return numpy.all(modulated_values <= self.AM_MAXIMUM_AMPLITUDE) and numpy.all(modulated_values >= self.AM_MINIMUM_AMPLITUDE)
 
     def modulate_values(self, values):
         num_values = values.shape[0]
