@@ -156,7 +156,7 @@ class GcodeConverter:
         # This is the default; no processing necessary
         pass
 
-    def to_mm_per_second(mm_per_minute):
+    def to_mm_per_second(self, mm_per_minute):
         return mm_per_minute / 60.0
 
     def gCommandMove(self, params, state, wave_file, cue_file):
@@ -178,7 +178,7 @@ class GcodeConverter:
             elif param.startswith('Z'):
                 z_pos = float(param[1:])
             elif param.startswith('F'):
-                feed_rate = to_mm_per_second(float(param[1:]))
+                feed_rate = self.to_mm_per_second(float(param[1:]))
             elif param.startswith('E'):
                 # The length of extrudate
                 # HACK: We can't control amount of extrudate, but we use this to determine if extruding was
