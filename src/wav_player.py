@@ -41,10 +41,13 @@ else:
 log = Logging(level=log_level)
 
 # Parse command line arguments
-if len(sys.argv) != 4:
+if len(sys.argv) == 4:
+    tuning_filename, wave_file_name, cue_file_name = sys.argv[1:]
+elif len(sys.argv) == 5:
+    tuning_filename, wave_file_name, cue_file_name, port = sys.argv[1:]
+else:
     print("Usage: %s <tuning.dat> <output.wav> <output.cue>" % sys.argv[0])
     sys.exit(1)
-tuning_filename, wave_file_name, cue_file_name = sys.argv[1:]
 
 # Loading tuning parameters
 tuning_collection = TuningParameterFileHandler.read_from_file(tuning_filename)

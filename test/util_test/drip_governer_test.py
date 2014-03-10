@@ -19,12 +19,32 @@ class DripGovernerTests(unittest.TestCase):
             passed = True
         self.assertTrue(passed)
 
-    # @patch('serial.Serial')
-    # def test_should_create_a_connection(self, mock_Serial):
-    #     my_mock_Serial = mock_Serial.return_value
-        
-    #     drip_governer = DripGoverner('COM4')
+    @patch('serial.Serial')
+    def test_should_create_a_connection(self, mock_Serial):       
+        drip_governer = DripGoverner('COM4')
 
+        self.assertTrue(mock_Serial.call_args[0] == ('COM4',9600))
+
+    @patch('serial.Serial')
+    def test_should_close_the_connection(self, mock_Serial):
+        drip_governer = DripGoverner('COM4')
+        my_mock_serial = mock_Serial.return_value
+        drip_governer.close()
+        my_mock_serial.close.assert_called_with()
+
+    @patch('serial.Serial')
+    def test_should_write_1_when_on(self, mock_Serial):
+        drip_governer = DripGoverner('COM4')
+        my_mock_serial = mock_Serial.return_value
+        drip_governer.start_dripping()
+        my_mock_serial.write.assert_called_with("1")
+
+    @patch('serial.Serial')
+    def test_should_write_0_when_off(self, mock_Serial):
+        drip_governer = DripGoverner('COM4')
+        my_mock_serial = mock_Serial.return_value
+        drip_governer.stop_dripping()
+        my_mock_serial.write.assert_called_with("0")
 
 if __name__ == '__main__':
     unittest.main()
