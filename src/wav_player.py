@@ -33,6 +33,10 @@ from audio.drip_detector import DripDetector, VirtualDripDetector
 from audio.tuning_parameter_file import TuningParameterFileHandler
 from util.logging import Logging
 
+from util.drip_govener import DripGoverner
+
+drip_govener = None
+
 if TRACE:
     log_level = 'TRACE'
 else:
@@ -45,6 +49,7 @@ if len(sys.argv) == 4:
     tuning_filename, wave_file_name, cue_file_name = sys.argv[1:]
 elif len(sys.argv) == 5:
     tuning_filename, wave_file_name, cue_file_name, port = sys.argv[1:]
+    drip_govener = DripGoverner(port)
 else:
     print("Usage: %s <tuning.dat> <output.wav> <output.cue>" % sys.argv[0])
     sys.exit(1)
@@ -159,6 +164,11 @@ try:
                         ahead_by_mm = current_height - current_cue.until_height
                         ahead_by_drips = int(ahead_by_mm * tuning_collection.drips_per_height)
                         log.warning('Too fast: '+'-' * ahead_by_drips + "> %d drips ahead" % ahead_by_drips)
+                        if drip_govener:
+                            if ahead_by_drips > 10:
+                                drip_govener.stop_dripping()
+                            elif ahead_by_drips < 5
+                                drip_govener.start_dripping()
                     # Advance to next cue
                     current_cue_index += 1
                     if current_cue_index >= len(cues):
@@ -205,5 +215,7 @@ finally:
     outstream.close()
     instream.close()
     pa.terminate()
+    if drip_govener:
+        drip_govener.close()
     if DEBUG_STREAM:
         debug_outfile.close()
