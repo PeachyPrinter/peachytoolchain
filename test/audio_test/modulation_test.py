@@ -14,9 +14,9 @@ class AmplitudeModulatorTests(unittest.TestCase):
     def test_modulation_left_should_throw_exception_below_25_percent(self):
         amplitudeModulator = AmplitudeModulator(self.sampling_rate)
         test_values = numpy.array([
-            [-1.0,  0.0 ],
-            [-1.0,  0.0 ],
-            [-1.0,  0.0 ], 
+            [-1.01,  0.0 ],
+            [-1.01,  0.0 ],
+            [-1.01,  0.0 ], 
         ])
         passed = False
         try:
@@ -29,9 +29,9 @@ class AmplitudeModulatorTests(unittest.TestCase):
     def test_modulation_left_should_throw_exception_above_100_percent(self):
         amplitudeModulator = AmplitudeModulator(self.sampling_rate)
         test_values = numpy.array([
-            [1.0,  0.0 ],
-            [1.0,  0.0 ],
-            [1.0,  0.0 ], 
+            [1.01,  0.0 ],
+            [1.01,  0.0 ],
+            [1.01,  0.0 ], 
         ])
         passed = False
         try:
@@ -44,9 +44,9 @@ class AmplitudeModulatorTests(unittest.TestCase):
     def test_modulation_right_should_throw_exception_below_25_percent(self):
         amplitudeModulator = AmplitudeModulator(self.sampling_rate)
         test_values = numpy.array([
-            [0.0,  -1.0 ],
-            [0.0,  -1.0 ],
-            [0.0,  -1.0 ], 
+            [0.0,  -1.01 ],
+            [0.0,  -1.01 ],
+            [0.0,  -1.01 ], 
         ])
         passed = False
         try:
@@ -59,9 +59,9 @@ class AmplitudeModulatorTests(unittest.TestCase):
     def test_modulation_right_should_throw_exception_above_100_percent(self):
         amplitudeModulator = AmplitudeModulator(self.sampling_rate)
         test_values = numpy.array([
-            [0.0,  1.0 ],
-            [0.0,  1.0 ],
-            [0.0,  1.0 ], 
+            [0.0,  1.01 ],
+            [0.0,  1.01 ],
+            [0.0,  1.01 ], 
         ])
         passed = False
         try:

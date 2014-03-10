@@ -16,4 +16,4 @@ class TuningParameterListModelTest(unittest.TestCase):
 
         tuning_parameter_list_model.addRow(tuning_parameter)
 
-        self.assertEquals(2, tuning_parameter_list_model.rowCount())
+        self.assertEquals(1, tuning_parameter_list_model.rowCount())

@@ -8,10 +8,7 @@ class Logging(object):
     def __init__(self, level = 'default'):
         level = level.lower()
         if level == 'default':
-            if os.environ['LOG_LEVEL']:
-                level = os.environ['LOG_LEVEL']
-            else:
-                level = 'warning'
+            level = os.getenv('LOG_LEVEL', 'warning')
         if level not in self.LEVELS:
             raise Exception("Logging level of %s invalid use: %s" % (level, self.LEVELS))
         self._levels = self.LEVELS[self.LEVELS.index(level):]
