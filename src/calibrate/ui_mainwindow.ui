@@ -352,6 +352,9 @@
              <property name="minimum">
               <number>1</number>
              </property>
+             <property name="maximum">
+              <number>99999</number>
+             </property>
              <property name="value">
               <number>50</number>
              </property>
@@ -654,7 +657,7 @@
                   <double>0.010000000000000</double>
                  </property>
                  <property name="value">
-                  <double>0.600000000000000</double>
+                  <double>0.750000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -677,7 +680,7 @@
                   <double>0.010000000000000</double>
                  </property>
                  <property name="value">
-                  <double>1.000000000000000</double>
+                  <double>0.750000000000000</double>
                  </property>
                 </widget>
                </item>
