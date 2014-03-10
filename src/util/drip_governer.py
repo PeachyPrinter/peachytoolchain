@@ -10,7 +10,7 @@ class DripGoverner(object):
             self.port = port
         else:
             raise ('%s is not a valid port try should be in the format "COM2"')
-        self.connection = serial.Serial("COM4", 9600)
+        self.connection = serial.Serial(self.port, 9600)
 
     def start_dripping(self):
         self.connection.write("1")
