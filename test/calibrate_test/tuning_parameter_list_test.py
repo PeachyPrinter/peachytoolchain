@@ -2,7 +2,6 @@ import unittest
 import sys
 import os
 
-sys.path.insert(0,os.path.join(os.path.dirname(__file__), '..', 'src', ))
 from calibrate.mainwindow import TuningParameterListModel
 from audio.tuning_parameters import TuningParameters, TuningParameterCollection
 

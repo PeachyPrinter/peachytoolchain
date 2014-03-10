@@ -1,8 +1,10 @@
 import unittest
 import os
+import sys
 
 import gcode_writer_test
-import calibrate
+
+sys.path.insert(0,os.path.join(os.path.dirname(__file__), '..', 'src', ))
 
 loader = unittest.TestLoader()
 suite = loader.discover(os.path.dirname(__file__), pattern='*test.py')
