@@ -1,6 +1,9 @@
 import sys
 import getopt
 
+def to_mm_per_minute(mm_per_second):
+    return mm_per_second / 60.0
+
 def square(speed, rapid_speed, size):
     data = ""
     data = data + "G1 X%.2f Y%.2f F%.2f\n" % (-1.0 * size, -1.0 * size,rapid_speed)
@@ -27,10 +30,10 @@ def main():
 
     #Defaults
     size = 5
-    start_speed = 100
-    max_speed = 1000
+    start_speed = to_mm_per_minute(100)
+    max_speed = to_mm_per_minute(1000)
     layers_per_unit = 10
-    speed_increment = 5
+    speed_increment = to_mm_per_minute(5)
     output_file = 'exposure_test.gcode'
 
     try:
@@ -38,13 +41,13 @@ def main():
             if (opt == '--size'):
                 size = int(arg)
             elif (opt == '--start_speed'):
-                start_speed = int(arg)
+                start_speed = to_mm_per_minute(int(arg))
             elif (opt == '--max_speed'):
-                max_speed = int(arg)
+                max_speed = to_mm_per_minute(int(arg))
             elif (opt == '--layers_per_unit'):
                 layers_per_unit = int(arg)
             elif (opt == '--speed_increment'):
-                speed_increment = int(arg)
+                speed_increment = to_mm_per_minute(int(arg))
             elif (opt == '--output_file'):
                 output_file = arg
             else:
