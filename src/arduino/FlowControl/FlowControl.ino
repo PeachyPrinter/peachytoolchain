@@ -1,14 +1,15 @@
 int LED = 13;
 int ENABLE_FLOW_PIN = 2;
 int DISABLE_FLOW_PIN = 3;
-int override = 10;
+int OVERRIDE_PIN = 10;
 int speaker = 4;
 boolean flowing = false;
 boolean broken = false;
 
+
 int PULSE_MILLISECONDS = 500;
-int AUTO_OFF_TICS = 100000;
-int ticsSinceChange = 0;
+long AUTO_OFF_TICS = 1000l * 60l;
+long lastUpdateTime = millis();
 
 void setup() {
   pinMode(LED, OUTPUT);
@@ -20,44 +21,70 @@ void setup() {
 }
 
 void speakOk(){
-  tone(4,262,500);
-  tone(4,392,250);
   tone(4,523,250);
+  delay(250);
+  tone(4,768,250);
+  delay(250);
+  tone(4,1068,250);
+  delay(250);
 }
 
 void speakBad() {
   tone(4,523,250);
-  tone(4,392,250);
-  tone(4,262,500);
+  delay(250);
+  tone(4,440,500);
+  delay(500);
 }
 
 void enableFlow() {
-  digitalWrite(ENABLE_FLOW_PIN, HIGH);
-  flowing = true;
-  ticsSinceChange = 0;
-  delay(PULSE_MILLISECONDS);
-  digitalWrite(ENABLE_FLOW_PIN, LOW);
-  
+  if (!flowing){
+    digitalWrite(ENABLE_FLOW_PIN, HIGH);
+    flowing = true;
+    broken = false;
+    lastUpdateTime = millis();
+    delay(PULSE_MILLISECONDS);
+    digitalWrite(ENABLE_FLOW_PIN, LOW);
+  }
 }
 
 void disableFlow(){
-  digitalWrite(DISABLE_FLOW_PIN, HIGH);
-  flowing = false;
-  ticsSinceChange = 0;
-  delay(PULSE_MILLISECONDS);
-  digitalWrite(DISABLE_FLOW_PIN, LOW);
+  if (flowing){
+    digitalWrite(DISABLE_FLOW_PIN, HIGH);
+    flowing = false;
+    broken  =false;
+    lastUpdateTime = millis();
+    delay(PULSE_MILLISECONDS);
+    digitalWrite(DISABLE_FLOW_PIN, LOW);
+  }
 }
 
+void toggleFlow(){
+  if (flowing){
+      disableFlow();
+    } else {
+      enableFlow();
+    }
+    delay(1000);
+}
 
 void loop() {
-  ticsSinceChange++;
+  digitalWrite(LED, LOW);
   char data = Serial.read();
-  if (data == '0' && flowing) {
-    disableFlow();
-  } else if (data == '1' && !flowing) {
-    enableFlow();
-  } else if (ticsSinceChange > AUTO_OFF_TICS) {
+  digitalWrite(LED, HIGH);
+  boolean override = digitalRead(OVERRIDE_PIN);
+  if (override == HIGH ){
+    toggleFlow();
+  } else {
+    if (data == '0') {
       disableFlow();
-      speakBad();
+      lastUpdateTime = millis();
+    } else if (data == '1') {
+      enableFlow();
+      broken = false;
+    } else if ( millis() - lastUpdateTime  > AUTO_OFF_TICS && !broken) {
+        disableFlow();
+        speakBad();
+        broken = true;
+    }
   }
 }
