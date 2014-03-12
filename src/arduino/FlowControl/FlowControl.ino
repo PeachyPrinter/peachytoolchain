@@ -58,13 +58,13 @@ void disableFlow(){
     digitalWrite(FLOW_INDICATOR_PIN, LOW);
     flowing = false;
     broken  =false;
-    lastUpdateTime = millis();
     delay(PULSE_MILLISECONDS);
     digitalWrite(DISABLE_FLOW_PIN, LOW);
   }
 }
 
 void toggleFlow(){
+  lastUpdateTime = millis();
   if (flowing){
       disableFlow();
     } else {
@@ -81,9 +81,9 @@ void loop() {
   if (override == HIGH ){
     toggleFlow();
   } else {
+    lastUpdateTime = millis();
     if (data == '0') {
       disableFlow();
-      lastUpdateTime = millis();
     } else if (data == '1') {
       enableFlow();
       broken = false;
