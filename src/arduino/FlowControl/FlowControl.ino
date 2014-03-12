@@ -3,6 +3,7 @@ int ENABLE_FLOW_PIN = 2;
 int DISABLE_FLOW_PIN = 3;
 int OVERRIDE_PIN = 10;
 int speaker = 4;
+int FLOW_INDICATOR_PIN = 12;
 boolean flowing = false;
 boolean broken = false;
 
@@ -13,7 +14,10 @@ long lastUpdateTime = millis();
 
 void setup() {
   pinMode(LED, OUTPUT);
-  pinMode(LED, OUTPUT);
+  pinMode(FLOW_INDICATOR_PIN, OUTPUT);
+  pinMode(ENABLE_FLOW_PIN, OUTPUT);
+  pinMode(DISABLE_FLOW_PIN, OUTPUT);
+  pinMode(OVERRIDE_PIN, INPUT);
   Serial.begin(9600);
   Serial.write("I am peachy");
   disableFlow();
@@ -39,6 +43,7 @@ void speakBad() {
 void enableFlow() {
   if (!flowing){
     digitalWrite(ENABLE_FLOW_PIN, HIGH);
+    digitalWrite(FLOW_INDICATOR_PIN, HIGH);
     flowing = true;
     broken = false;
     lastUpdateTime = millis();
@@ -50,6 +55,7 @@ void enableFlow() {
 void disableFlow(){
   if (flowing){
     digitalWrite(DISABLE_FLOW_PIN, HIGH);
+    digitalWrite(FLOW_INDICATOR_PIN, LOW);
     flowing = false;
     broken  =false;
     lastUpdateTime = millis();
