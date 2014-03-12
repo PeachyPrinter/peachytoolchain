@@ -9,7 +9,7 @@ boolean broken = false;
 
 
 int PULSE_MILLISECONDS = 500;
-long AUTO_OFF_TICS = 1000l * 60l;
+long AUTO_OFF_TICS = 1000l * 60l * 5l; // 5 Minutes
 long lastUpdateTime = millis();
 
 void setup() {
@@ -46,7 +46,6 @@ void enableFlow() {
     digitalWrite(FLOW_INDICATOR_PIN, HIGH);
     flowing = true;
     broken = false;
-    lastUpdateTime = millis();
     delay(PULSE_MILLISECONDS);
     digitalWrite(ENABLE_FLOW_PIN, LOW);
   }
@@ -58,7 +57,6 @@ void disableFlow(){
     digitalWrite(FLOW_INDICATOR_PIN, LOW);
     flowing = false;
     broken  =false;
-    lastUpdateTime = millis();
     delay(PULSE_MILLISECONDS);
     digitalWrite(DISABLE_FLOW_PIN, LOW);
   }
@@ -83,8 +81,10 @@ void loop() {
     toggleFlow();
   } else {
     if (data == '0') {
+      lastUpdateTime = millis();
       disableFlow();
     } else if (data == '1') {
+      lastUpdateTime = millis();
       enableFlow();
       broken = false;
     } else if ( millis() - lastUpdateTime  > AUTO_OFF_TICS && !broken) {

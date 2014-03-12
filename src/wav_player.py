@@ -33,8 +33,6 @@ from audio.drip_detector import DripDetector, VirtualDripDetector
 from audio.tuning_parameter_file import TuningParameterFileHandler
 from util.logging import Logging
 
-from util.drip_governor import DripGoverner
-
 drip_governor = None
 
 if TRACE:
@@ -48,6 +46,7 @@ log = Logging(level=log_level)
 if len(sys.argv) == 4:
     tuning_filename, wave_file_name, cue_file_name = sys.argv[1:]
 elif len(sys.argv) == 5:
+    from util.drip_governor import DripGovernor
     tuning_filename, wave_file_name, cue_file_name, port = sys.argv[1:]
     drip_governor = DripGovernor(port)
 else:
@@ -169,7 +168,7 @@ try:
                         if drip_governor:
                             if ahead_by_drips > 10:
                                 drip_governor.stop_dripping()
-                            elif ahead_by_drips < 5
+                            elif ahead_by_drips < 5:
                                 drip_governor.start_dripping()
                     # Advance to next cue
                     current_cue_index += 1

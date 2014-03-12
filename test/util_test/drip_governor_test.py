@@ -60,11 +60,11 @@ class DripGovernorTests(unittest.TestCase):
         drip_governor = DripGovernor('COM4')
         my_mock_serial = mock_Serial.return_value
         drip_governor.stop_dripping()
-        self.assertEqual(0, my_mock_serial.write.call_count, "Setup failed")
+        self.assertEqual(1, my_mock_serial.write.call_count, "Setup failed")
 
         drip_governor.stop_dripping()
         
-        self.assertEqual(0, my_mock_serial.write.call_count)
+        self.assertEqual(1, my_mock_serial.write.call_count)
 
     @patch('serial.Serial')
     def test_should_write_a_0_when_already_on_and_off_requested(self, mock_Serial):
@@ -130,7 +130,7 @@ class DripGovernorTests(unittest.TestCase):
         time.sleep(0.011)
         drip_governor.stop_dripping()
 
-        self.assertEqual(1, my_mock_serial.write.call_count)
+        self.assertEqual(2, my_mock_serial.write.call_count)
 
 
 if __name__ == '__main__':

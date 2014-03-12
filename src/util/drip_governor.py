@@ -1,6 +1,5 @@
 import serial
 import time
-import re
 
 class DripGovernor(object):
     _connection = None
@@ -13,12 +12,11 @@ class DripGovernor(object):
     def __init__(self, port, repeat_delay_ms = 2000):
         self._port = port
         self._repeat_delay_ms = repeat_delay_ms
+        self._last_update = 0
         self._connection = serial.Serial(self._port, 9600)
-        self._last_update = self._current_milli_time()
 
     def _old(self):
         return self._current_milli_time() - self._last_update > self._repeat_delay_ms
-
 
     def start_dripping(self):
         if self._flow_on == False or self._old():
