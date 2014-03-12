@@ -158,6 +158,8 @@ try:
                     wave_pos = frame_position_cache[current_frame_num]
                     wave_file.setpos(wave_pos)
                     log.info("Waiting for drips")
+                    if drip_govener:
+                        drip_govener.start_dripping()
                 else:
                     if (current_cue.cue_type == cue_file_mod.CueTypes.LOOP_UNTIL_HEIGHT and current_height > current_cue.until_height):
                         # log.warning("Dripping Too Fast Current: %s Cue: %s ahead by:  %.2f" % (current_height, current_cue.until_height, (current_height - current_cue.until_height)))
