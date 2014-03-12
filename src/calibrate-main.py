@@ -15,7 +15,7 @@ from calibrate.transformer_proxy import PositionToAudioTransformerProxy
 from calibrate.modulator_proxy import ModulatorProxy
 
 os.environ['LOG_LEVEL'] = 'warning'
-SAMPLING_RATE = 44100
+SAMPLING_RATE = 48000
 
 app = QtGui.QApplication(sys.argv)
 widget = QtGui.QMainWindow()

@@ -32,7 +32,7 @@ from audio.tuning_parameter_file import TuningParameterFileHandler
 from audio.util import convert_values_to_frames, clip_values
 
 
-WAVE_SAMPLING_RATE = 44100
+WAVE_SAMPLING_RATE = 48000
 DEBUG = False   # Set to True for debugging messages
 
 

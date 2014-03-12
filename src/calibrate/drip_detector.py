@@ -15,7 +15,7 @@ class DripDetector(threading.Thread):
     _hold_samples = 0
     _indrip = False
 
-    def __init__(self, drips_per_mm, initial_height = 0.0, sampling_frequency = 44100, threshold = 400, release_ms = 6, echo_drips = False):
+    def __init__(self, drips_per_mm, initial_height = 0.0, sampling_frequency = 48000, threshold = 400, release_ms = 6, echo_drips = False):
         threading.Thread.__init__(self)
         self._drips_per_mm = drips_per_mm * 1.0
         self._sampling_frequency = sampling_frequency
