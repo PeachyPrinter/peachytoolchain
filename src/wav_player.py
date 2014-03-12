@@ -33,9 +33,9 @@ from audio.drip_detector import DripDetector, VirtualDripDetector
 from audio.tuning_parameter_file import TuningParameterFileHandler
 from util.logging import Logging
 
-from util.drip_govener import DripGoverner
+from util.drip_governor import DripGoverner
 
-drip_govener = None
+drip_governor = None
 
 if TRACE:
     log_level = 'TRACE'
@@ -49,7 +49,7 @@ if len(sys.argv) == 4:
     tuning_filename, wave_file_name, cue_file_name = sys.argv[1:]
 elif len(sys.argv) == 5:
     tuning_filename, wave_file_name, cue_file_name, port = sys.argv[1:]
-    drip_govener = DripGoverner(port)
+    drip_governor = DripGovernor(port)
 else:
     print("Usage: %s <tuning.dat> <output.wav> <output.cue>" % sys.argv[0])
     sys.exit(1)
@@ -158,19 +158,19 @@ try:
                     wave_pos = frame_position_cache[current_frame_num]
                     wave_file.setpos(wave_pos)
                     log.info("Waiting for drips")
-                    if drip_govener:
-                        drip_govener.start_dripping()
+                    if drip_governor:
+                        drip_governor.start_dripping()
                 else:
                     if (current_cue.cue_type == cue_file_mod.CueTypes.LOOP_UNTIL_HEIGHT and current_height > current_cue.until_height):
                         # log.warning("Dripping Too Fast Current: %s Cue: %s ahead by:  %.2f" % (current_height, current_cue.until_height, (current_height - current_cue.until_height)))
                         ahead_by_mm = current_height - current_cue.until_height
                         ahead_by_drips = int(ahead_by_mm * tuning_collection.drips_per_height)
                         log.warning('Too fast: '+'-' * ahead_by_drips + "> %d drips ahead" % ahead_by_drips)
-                        if drip_govener:
+                        if drip_governor:
                             if ahead_by_drips > 10:
-                                drip_govener.stop_dripping()
+                                drip_governor.stop_dripping()
                             elif ahead_by_drips < 5
-                                drip_govener.start_dripping()
+                                drip_governor.start_dripping()
                     # Advance to next cue
                     current_cue_index += 1
                     if current_cue_index >= len(cues):
@@ -217,7 +217,7 @@ finally:
     outstream.close()
     instream.close()
     pa.terminate()
-    if drip_govener:
-        drip_govener.close()
+    if drip_governor:
+        drip_governor.close()
     if DEBUG_STREAM:
         debug_outfile.close()

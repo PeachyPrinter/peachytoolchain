@@ -2,7 +2,7 @@ import serial
 import time
 import re
 
-class DripGoverner(object):
+class DripGovernor(object):
     _connection = None
     _flow_on = False
     _last_update = 0
