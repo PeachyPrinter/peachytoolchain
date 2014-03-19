@@ -22,6 +22,10 @@ class TuningParameterCollection(object):
         self._cached_tuning_parameters = None
         self._cached_height = None
 
+    def reset_cache(self):
+        self._cached_tuning_parameters = None
+        self._cached_height = None
+
     def get_tuning_parameters_for_height(self, height):
         # Caching
         if self._cached_height == height:

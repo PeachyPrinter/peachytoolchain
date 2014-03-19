@@ -69,16 +69,17 @@ class TuningParameterListModel(QtCore.QAbstractListModel, Logging):
             return False
         self.beginRemoveRows(parent, row, row)
         del self._collection.tuning_parameters[row]
+        self._collection.reset_cache()
         self.endRemoveRows()
 
     def addRow(self, new_tuning_parameters):
         if len([tp for tp in self._collection.tuning_parameters if tp.height == new_tuning_parameters.height]) > 0:
             self.warning("Cannot add row to Tuning Parameters that already exists")
             return False
-
         num_rows = self.rowCount()
         self.beginInsertRows(QtCore.QModelIndex(), num_rows, num_rows)
         self._collection.tuning_parameters.append(new_tuning_parameters)
+        self._collection.reset_cache()
         self.endInsertRows()
 
 
@@ -460,7 +461,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, Logging):
         index = self.get_selected_calibration_index()
         tp = self.calibrations_list_model.data(index, role=QtCore.Qt.UserRole)
         self.debug("Tuning Parameters Height: %s" % str(tp.height))
-        self.tuning_parameters = self.tuning_collection.get_tuning_parameters_for_height(tp.height)
+        self.tuning_parameters = tp
         self.update_values_from_tuning_parameters()
         self.update_height_adapter()
         self.delete_calibration_button.setEnabled(self.calibrations_list_model.rowCount() > 1)

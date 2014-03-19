@@ -2,7 +2,7 @@ import sys
 import getopt
 
 def to_mm_per_minute(mm_per_second):
-    return mm_per_second / 60.0
+    return int(mm_per_second * 60.0)
 
 def square(speed, rapid_speed, size):
     data = ""
@@ -17,7 +17,15 @@ def get_layer(z, speed, rapid_speed, size):
     return data + square(speed, rapid_speed, size)
 
 def usage():
-    print("Usage:\npython exposure_test.py --size=(1/2 print area recommended)")
+    print("""Usage:\npython exposure_test.py [options]
+        --size=5 (1/2 print area recommended) size in mm of the print
+        --start_speed=100 (mm per second) initial speed to start printing at
+        --max_speed=1000 (mm per second) speed to stop printing at 
+        --layers_per_unit=10 number of layers to write per increment
+        --speed_increment=5 (mm per second) how much to change each layer
+        --base_size=3 (mm) how much base to print before starting the test
+        --optput_file=exposure_test.gcode file name for generated g-code
+        """)
 
 def main():
     try:
@@ -34,6 +42,7 @@ def main():
     max_speed = to_mm_per_minute(1000)
     layers_per_unit = 10
     speed_increment = to_mm_per_minute(5)
+    base_z_size = 3
     output_file = 'exposure_test.gcode'
 
     try:
@@ -48,6 +57,8 @@ def main():
                 layers_per_unit = int(arg)
             elif (opt == '--speed_increment'):
                 speed_increment = to_mm_per_minute(int(arg))
+            elif (opt == '--base_size'):
+                base_z_size = to_mm_per_minute(int(arg))
             elif (opt == '--output_file'):
                 output_file = arg
             else:
@@ -80,7 +91,7 @@ def main():
         output.write(layer)
         z = z + z_layer
 
-    print("ZUnits = " + str(z))
+    print("Print height in mm = " + str(z))
     output.close()
 
     print("Complete: Gcode file is located at %s" % output_file)
