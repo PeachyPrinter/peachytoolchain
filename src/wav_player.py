@@ -49,6 +49,7 @@ elif len(sys.argv) == 5:
     from util.drip_governor import DripGovernor
     tuning_filename, wave_file_name, cue_file_name, port = sys.argv[1:]
     drip_governor = DripGovernor(port)
+    print('importing drip gov')
 else:
     print("Usage: %s <tuning.dat> <output.wav> <output.cue>" % sys.argv[0])
     sys.exit(1)
@@ -168,8 +169,10 @@ try:
                         if drip_governor:
                             if ahead_by_drips > 10:
                                 drip_governor.stop_dripping()
+                                print('------Stop Dripping!-----')
                             elif ahead_by_drips < 5:
                                 drip_governor.start_dripping()
+                                print('+++++Start Dripping!+++++')
                     # Advance to next cue
                     current_cue_index += 1
                     if current_cue_index >= len(cues):
@@ -217,6 +220,8 @@ finally:
     instream.close()
     pa.terminate()
     if drip_governor:
+        drip_governor.stop_dripping()
+        print('------Stop Dripping!-----')
         drip_governor.close()
     if DEBUG_STREAM:
         debug_outfile.close()
