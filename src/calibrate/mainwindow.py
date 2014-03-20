@@ -211,6 +211,17 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, Logging):
         self.modulation_radioButton_AM.setHidden(True)
         self.modulation_radioButton_DC.setHidden(True)
         self.modulation_label.setHidden(True)
+        self.size_label.setHidden(True)
+        self.size_units.setHidden(True)
+        self.size_edit.setHidden(True)
+        self.center_label.setHidden(True)
+        self.center_units.setHidden(True)
+        self.shape_center_y_edit.setHidden(True)
+        self.shape_center_x_edit.setHidden(True)
+        self.x_trapezoid_label.setHidden(True)
+        self.y_trapezoid_label.setHidden(True)
+        self.x_trapezoid_spin.setHidden(True)
+        self.y_trapezoid_spin.setHidden(True)
         
 
     def make_edit_signal_handler(self, edit, container, var_name, validator=None, after=None):
@@ -246,11 +257,20 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, Logging):
         self._parse_edit_as_float(self.build_x_max_edit, self.tuning_collection, 'build_x_max')
         self.tuning_collection.build_x_min = self.tuning_collection.build_x_max * -1.0
         self.build_x_min_edit.setText(str(self.tuning_collection.build_x_min))
+        self._set_size()
 
     def y_max_changed(self):
         self._parse_edit_as_float(self.build_y_max_edit, self.tuning_collection, 'build_y_max')
         self.tuning_collection.build_y_min = self.tuning_collection.build_y_max * -1.0
         self.build_y_min_edit.setText(str(self.tuning_collection.build_y_min))
+        self._set_size()
+
+    def _set_size(self):
+        if self.tuning_collection.build_x_max <= self.tuning_collection.build_y_max:
+            self.size_edit.setValue(self.tuning_collection.build_x_max * 2.0)
+        else:
+            self.size_edit.setValue(self.tuning_collection.build_y_max * 2.0)
+        self.size_changed()
 
 
     # -------------------Tunning by height----------------------
