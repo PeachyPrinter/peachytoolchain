@@ -1,9 +1,15 @@
+#include <Servo.h>
+
 int LED = 13;
 int ENABLE_FLOW_PIN = 2;
 int DISABLE_FLOW_PIN = 3;
 int OVERRIDE_PIN = 10;
 int speaker = 4;
 int FLOW_INDICATOR_PIN = 12;
+int FLOW_CONTROL_VALVE_PIN = 7;
+int FLOW_CONTROL_VALVE_OPEN_SETTING_PIN = 0; 
+int FLOW_CONTROL_VALVE_CLOSED_SETTING_PIN = 0; 
+
 boolean flowing = false;
 boolean broken = false;
 
@@ -12,14 +18,8 @@ int PULSE_MILLISECONDS = 500;
 long AUTO_OFF_TICS = 1000l * 60l * 5l; // 5 Minutes
 long lastUpdateTime = millis();
 
-// branch spesific variabls:
-#include <Servo.h>
+Servo flowControlValve;  // create servo object to control a servo 
 
-Servo valve_servo;  // create servo object to control a servo 
-
-int potPinOpen = 0;  // analog pin used to connect the potentiometer that sets the open postion of the valve
-int potPinClosed = 1; // analog pin used to connect the potentiometer that sets the closed postion of the valve
-int val;    // variable to read the value from the analog pin 
 int openTime = 100;  
 int closedTime = 100;
 
@@ -35,31 +35,28 @@ void setup() {
   Serial.write("I am peachy");
   disableFlow();
   speakOk();
-  valve_servo.attach(7);  // rylan - attaches the servo on pin 7 to the servo object 
+  flowControlValve.attach(FLOW_CONTROL_VALVE_PIN);
 }
 
-void servo_valve_on() // rylan added this !
-{
-  for (int loopCount = 0; loopCount <= openTime; loopCount += 1){   
-  val = analogRead(potPinOpen);            // reads the value of the potentiometer (value between 0 and 1023) 
-  val = map(val, 0, 1023, 0, 179);     // scale it to use it with the servo (value between 0 and 180) 
-  valve_servo.write(val);                  // sets the servo position according to the scaled value 
-  delay(10);
-}
-}
-
-void servo_valve_off()  // rylan added this too 
-{
-  for (int loopCount = 0; loopCount <= closedTime; loopCount += 1){   
-  val = analogRead(potPinClosed);            // reads the value of the potentiometer (value between 0 and 1023) 
-  val = map(val, 0, 1023, 0, 179);     // scale it to use it with the servo (value between 0 and 180) 
-  valve_servo.write(val);                  // sets the servo position according to the scaled value 
-  delay(10);
-}
+void servo_valve_on() {
+  // TODO: JT 2014-03-20 : Remove this loop and replace with cleaner logic 
+  for (int loopCount = 0; loopCount <= openTime; loopCount += 1) {   
+    int openValvePosisitionRaw = analogRead(FLOW_CONTROL_VALVE_OPEN_SETTING_PIN); 
+    int openValvePosisition = map(openValvePosisitionRaw, 0, 1023, 0, 179);
+    flowControlValve.write(openValvePosisition); 
+    delay(10);
+  }
 }
 
-
-
+void servo_valve_off() {
+  // TODO: JT 2014-03-20 : Remove this loop and replace with cleaner logic
+  for (int loopCount = 0; loopCount <= closedTime; loopCount += 1) {
+    int closedValvePosisitionRaw = analogRead(FLOW_CONTROL_VALVE_CLOSED_SETTING_PIN);
+    int closedValvePosisition = map(closedValvePosisitionRaw, 0, 1023, 0, 179);
+    flowControlValve.write(closedValvePosisition);
+    delay(10);
+  }
+}
 
 
 void speakOk(){
@@ -82,7 +79,7 @@ void enableFlow() {
   if (!flowing){
     digitalWrite(ENABLE_FLOW_PIN, HIGH);
     digitalWrite(FLOW_INDICATOR_PIN, HIGH);
-    servo_valve_on(); // rylan was here :)
+    servo_valve_on();
     flowing = true;
     broken = false;
     delay(PULSE_MILLISECONDS);
@@ -94,7 +91,7 @@ void disableFlow(){
   if (flowing){
     digitalWrite(DISABLE_FLOW_PIN, HIGH);
     digitalWrite(FLOW_INDICATOR_PIN, LOW);
-    servo_valve_off(); // rylan 
+    servo_valve_off();
     flowing = false;
     broken  =false;
     delay(PULSE_MILLISECONDS);
