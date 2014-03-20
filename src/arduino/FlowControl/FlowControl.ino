@@ -12,6 +12,19 @@ int PULSE_MILLISECONDS = 500;
 long AUTO_OFF_TICS = 1000l * 60l * 5l; // 5 Minutes
 long lastUpdateTime = millis();
 
+// branch spesific variabls:
+#include <Servo.h>
+
+Servo valve_servo;  // create servo object to control a servo 
+
+int potPinOpen = 0;  // analog pin used to connect the potentiometer that sets the open postion of the valve
+int potPinClosed = 1; // analog pin used to connect the potentiometer that sets the closed postion of the valve
+int val;    // variable to read the value from the analog pin 
+int openTime = 100;  
+int closedTime = 100;
+
+
+
 void setup() {
   pinMode(LED, OUTPUT);
   pinMode(FLOW_INDICATOR_PIN, OUTPUT);
@@ -22,7 +35,32 @@ void setup() {
   Serial.write("I am peachy");
   disableFlow();
   speakOk();
+  valve_servo.attach(7);  // rylan - attaches the servo on pin 7 to the servo object 
 }
+
+void servo_valve_on() // rylan added this !
+{
+  for (int loopCount = 0; loopCount <= openTime; loopCount += 1){   
+  val = analogRead(potPinOpen);            // reads the value of the potentiometer (value between 0 and 1023) 
+  val = map(val, 0, 1023, 0, 179);     // scale it to use it with the servo (value between 0 and 180) 
+  valve_servo.write(val);                  // sets the servo position according to the scaled value 
+  delay(10);
+}
+}
+
+void servo_valve_off()  // rylan added this too 
+{
+  for (int loopCount = 0; loopCount <= closedTime; loopCount += 1){   
+  val = analogRead(potPinClosed);            // reads the value of the potentiometer (value between 0 and 1023) 
+  val = map(val, 0, 1023, 0, 179);     // scale it to use it with the servo (value between 0 and 180) 
+  valve_servo.write(val);                  // sets the servo position according to the scaled value 
+  delay(10);
+}
+}
+
+
+
+
 
 void speakOk(){
   tone(4,523,250);
@@ -44,6 +82,7 @@ void enableFlow() {
   if (!flowing){
     digitalWrite(ENABLE_FLOW_PIN, HIGH);
     digitalWrite(FLOW_INDICATOR_PIN, HIGH);
+    servo_valve_on(); // rylan was here :)
     flowing = true;
     broken = false;
     delay(PULSE_MILLISECONDS);
@@ -55,6 +94,7 @@ void disableFlow(){
   if (flowing){
     digitalWrite(DISABLE_FLOW_PIN, HIGH);
     digitalWrite(FLOW_INDICATOR_PIN, LOW);
+    servo_valve_off(); // rylan 
     flowing = false;
     broken  =false;
     delay(PULSE_MILLISECONDS);
