@@ -66,10 +66,10 @@ echo "------------------------------------"
 echo "Create Peachy Tool Chain archive"
 echo "------------------------------------"
 
-tar cvf PeachyToolChain-$VERSION.tar README.md
-tar rvf PeachyToolChain-$VERSION.tar licence.txt
-tar rvf PeachyToolChain-$VERSION.tar src/
-tar rvf PeachyToolChain-$VERSION.tar doc/
-tar rvf PeachyToolChain-$VERSION.tar models/
-tar rvf PeachyToolChain-$VERSION.tar audio_test_files/
+tar cvf PeachyToolChain-$VERSION-MAC.tar README.md
+tar rvf PeachyToolChain-$VERSION-MAC.tar licence.txt
+tar rvf PeachyToolChain-$VERSION-MAC.tar src/
+tar rvf PeachyToolChain-$VERSION-MAC.tar doc/
+tar rvf PeachyToolChain-$VERSION-MAC.tar models/
+tar rvf PeachyToolChain-$VERSION-MAC.tar audio_test_files/
 

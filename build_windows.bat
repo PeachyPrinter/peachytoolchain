@@ -63,9 +63,9 @@ echo ------------------------------------
 echo Create Peachy Tool Chain archive
 echo ------------------------------------
 
-7za a -tzip PeachyToolChain-%VERSION%.zip README.md
-7za a -tzip PeachyToolChain-%VERSION%.zip licence.txt
-7za a -tzip PeachyToolChain-%VERSION%.zip src/
-7za a -tzip PeachyToolChain-%VERSION%.zip doc/
-7za a -tzip PeachyToolChain-%VERSION%.zip models/
-7za a -tzip PeachyToolChain-%VERSION%.zip audio_test_files/
+7za a -tzip PeachyToolChain-%VERSION%-WINDOWS.zip README.md
+7za a -tzip PeachyToolChain-%VERSION%-WINDOWS.zip licence.txt
+7za a -tzip PeachyToolChain-%VERSION%-WINDOWS.zip src/
+7za a -tzip PeachyToolChain-%VERSION%-WINDOWS.zip doc/
+7za a -tzip PeachyToolChain-%VERSION%-WINDOWS.zip models/
+7za a -tzip PeachyToolChain-%VERSION%-WINDOWS.zip audio_test_files/
