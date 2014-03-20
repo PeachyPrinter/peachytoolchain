@@ -69,4 +69,3 @@ echo ------------------------------------
 7za a -tzip PeachyToolChain-%VERSION%.zip doc/
 7za a -tzip PeachyToolChain-%VERSION%.zip models/
 7za a -tzip PeachyToolChain-%VERSION%.zip audio_test_files/
-7za a -tzip PeachyToolChain-%VERSION%.zip bin/*.bat

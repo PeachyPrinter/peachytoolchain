@@ -71,4 +71,3 @@ tar rvf PeachyToolChain-$VERSION.tar src/
 tar rvf PeachyToolChain-$VERSION.tar doc/
 tar rvf PeachyToolChain-$VERSION.tar models/
 tar rvf PeachyToolChain-$VERSION.tar audio_test_files/
-tar rvf PeachyToolChain-$VERSION.tar bin/*.sh
