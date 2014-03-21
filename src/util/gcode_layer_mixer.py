@@ -43,12 +43,16 @@ class GCodeLayerMixer(object):
             mixed_layer.append(current)
         self.buffer = mixed_layer
 
+    _last_mix_up_index = 1
     def _mixup(self, items):
         if len(items) < 1:
             return items
-        head = items[0]
-        tail = items[1:]
-        tail.append(head)
+        if len(items) < self. _last_mix_up_index:
+            self._last_mix_up_index = 0
+        head = items[:self._last_mix_up_index]
+        tail = items[self._last_mix_up_index:]
+        [ tail.append(element) for element in head ]
+        self._last_mix_up_index += 1
         return tail
             
     def _is_z_movement(self, gcodeline):
