@@ -1,12 +1,7 @@
-
 class GCodeLayerMixer(object):
     def __init__(self, source):
-         self.lines = self.generate(source)
+         self.lines = self._generate(source)
          self.buffer = [ ]
-
-    def generate(self,source):
-        for line in source:
-            yield line
 
     def __iter__(self):
         return self
@@ -21,6 +16,10 @@ class GCodeLayerMixer(object):
         self.buffer = tail
 
         return head
+
+    def _generate(self,source):
+        for line in source:
+            yield line
 
     def _populate_buffer(self):
         layer_data = [ ]
@@ -54,6 +53,7 @@ class GCodeLayerMixer(object):
         [ tail.append(element) for element in head ]
         self._last_mix_up_index += 1
         return tail
+
             
     def _is_z_movement(self, gcodeline):
         return gcodeline.startswith('G') and 'Z' in gcodeline 

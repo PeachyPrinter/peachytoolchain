@@ -30,6 +30,7 @@ from audio.transform import PositionToAudioTransformer
 from audio import modulation
 from audio.tuning_parameter_file import TuningParameterFileHandler
 from audio.util import convert_values_to_frames, clip_values
+from util.gcode_layer_mixer import GCodeLayerMixer
 
 
 WAVE_SAMPLING_RATE = 48000
@@ -74,7 +75,8 @@ class GcodeConverter:
         self.modulator = None
         self.warnings = []
 
-    def convertGcode(self, gcode_filename, wave_filename, cue_filename):
+    def convertGcode(self, gcode_filename, wave_filename, cue_filename, flags = []):
+        self.flags = flags
         self.transformer = self.createTransformer(self.tuning_collection)
         self.modulator = self.createModulator(self.tuning_collection)
         wave_file = self.createWaveFile(wave_filename)
@@ -119,8 +121,11 @@ class GcodeConverter:
         """Opens the given filename, reads the data in as ascii format, and strips all lines, returning
         a list of lines."""
         gcode_file = open(gcode_filename, 'rt')
-        gcode_data = [x.strip() for x in gcode_file.readlines()]
-        return gcode_data
+        if 'm' in self.flags:
+            return list(GCodeLayerMixer(gcode_file))
+        else:
+            gcode_data = [x.strip() for x in gcode_file.readlines()]
+            return gcode_data
 
     def createInitialMachineState(self):
         return MachineState()
@@ -357,13 +362,27 @@ class GcodeConverter:
         self.moveLateral(0.0, 0.0, state, wave_file, False, rapid=True)
         
 
-if len(sys.argv) != 5:
-    print("Usage: %s <tuning.dat> <input.gcode> <output.wav> <output.cue>" % sys.argv[0])
-    sys.exit(1)
+def read_args():
+    arg_list = []
+    flags = []
+    for arg in sys.argv[1:]:
+        if arg.startswith('-'):
+            flags.append(arg.split('-')[1])
+        else:
+            arg_list.append(arg)
+    if len(arg_list) == 4:
+        return { 'tuning' : arg_list[0], 'gcode': arg_list[1], 'wav': arg_list[2], 'cue': arg_list[3], 'flags' : flags}
+    else:
+        print("Usage: %s <tuning.dat> <input.gcode> <output.wav> <output.cue>" % sys.argv[0])
+        print("Options:\n\t-m\tmix up gcode order")
+        sys.exit(1)
 
-print("Converting G-code file '%s' into wave file '%s' and cue file '%s', using tuning data file '%s'" % (sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[1]))
+args = read_args()
+
+print args
+print("Converting G-code file '%s' into wave file '%s' and cue file '%s', using tuning data file '%s'" % (args['gcode'], args['wav'], args['cue'], args['tuning']))
 
 tuning_file_handler = TuningParameterFileHandler()
-tuning_collection = tuning_file_handler.read_from_file(sys.argv[1])
+tuning_collection = tuning_file_handler.read_from_file(args['tuning'])
 parser = GcodeConverter(tuning_collection)
-parser.convertGcode(sys.argv[2], sys.argv[3], sys.argv[4])
+parser.convertGcode(args['gcode'], args['wav'], args['cue'], args['flags'])

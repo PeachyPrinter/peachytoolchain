@@ -56,6 +56,8 @@ class GCodeLayerMixerTests(unittest.TestCase):
         actual_lines = list(actual)
         
         self.assertEqual(actual_lines,expected, "\n%s\n%s" % (actual_lines,expected))
+        
+        
 
 # Laser on/off
 # Looks for rapid 
