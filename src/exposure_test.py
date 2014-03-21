@@ -24,7 +24,7 @@ def usage():
         --layers_per_unit=10 number of layers to write per increment
         --speed_increment=5 (mm per second) how much to change each layer
         --base_size=3 (mm) how much base to print before starting the test
-        --optput_file=exposure_test.gcode file name for generated g-code
+        --output_file=exposure_test.gcode file name for generated g-code
         """)
 
 def main():

@@ -60,7 +60,6 @@ if [ $? != 0 ]; then
     exit 55
 fi
 
-
 echo "------------------------------------"
 echo "Create Peachy Tool Chain archive"
 echo "------------------------------------"
