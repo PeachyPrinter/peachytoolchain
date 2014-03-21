@@ -48,6 +48,15 @@ class GCodeLayerMixerTests(unittest.TestCase):
         
         self.assertEqual(actual_lines,expected,"\n%s\n%s" % (actual_lines,expected))
 
+    def test_should_do_nothing_if_one_item_in_z_axis(self):
+        test_data= "G1 Z1.0 F900.0\nG1 X0.00 Y0.00 F900.00"
+        expected = "G1 Z1.0 F900.0\nG1 X0.00 Y0.00 F900.00".split('\n')
+        
+        actual = GCodeLayerMixer(StringIO.StringIO(test_data))
+        actual_lines = list(actual)
+        
+        self.assertEqual(actual_lines,expected, "\n%s\n%s" % (actual_lines,expected))
+
 # Laser on/off
 # Looks for rapid 
 # One Item Lists
