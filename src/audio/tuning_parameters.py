@@ -30,6 +30,9 @@ class TuningParameterCollection(object):
         # Caching
         if self._cached_height == height:
             return self._cached_tuning_parameters
+        existing = [param for param in self.tuning_parameters if param.height == height ]
+        if existing:
+            return existing[0]
         new_tp = TuningParameters()
         self._cached_tuning_parameters = new_tp
         self._cached_height = height
