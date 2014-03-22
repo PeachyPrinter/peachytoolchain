@@ -5,9 +5,9 @@ int ENABLE_FLOW_PIN = 2;
 int DISABLE_FLOW_PIN = 3;
 int OVERRIDE_PIN = 10;
 int speaker = 4;
-int FLOW_INDICATOR_PIN = 12;
+int FLOW_INDICATOR_PIN = 13; // hey James there is already an led on pin 13 on every arduino board, lets use that one
 int FLOW_CONTROL_VALVE_PIN = 7;
-int FLOW_CONTROL_VALVE_OPEN_SETTING_PIN = 0; 
+int FLOW_CONTROL_VALVE_OPEN_SETTING_PIN = 1; // found a little bug, we were reading both position from the same pot
 int FLOW_CONTROL_VALVE_CLOSED_SETTING_PIN = 0; 
 
 boolean flowing = false;
