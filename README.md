@@ -1,7 +1,9 @@
 Peachy Tool Chain
 ===============
 
-NOTE: For installation instructions see docs/INSTALL.md
+NOTE: For usage instructions http://instructions.peachyprinter.com
+
+NOTE To Developers: This version of the peachy printer code is depricated and a new code base has been created. As such pull requests outside of major bugs will not be considered.
 
 This is the toolchain for producing prints with the Peachy Printer. It consists of 3 major tools:
 
@@ -11,7 +13,6 @@ This is the toolchain for producing prints with the Peachy Printer. It consists 
 
 Caveats
 ------------------------
-* This code is still in an alpha state. 
 * Major changes are to be expected to the structure and operation of all parts of this toolchain. Outside of bug fixes pull request are not recommended
 * This code should not be used as an example for coding practices and standards.
 * The next version of this software will be a complete rewrite.
@@ -26,34 +27,6 @@ This purpose of this guide should cover the basics of printing and will cover th
 * Converting your model to gcode
 * Converting your model to Peachy Printer format
 * Printing you model
-
-
-Software Installation
------------------------
-* Please follow the steps in the docs/INSTALL.md
-
-Hardware setup
------------------------
-TODO
-
-Calibration
------------------------
-### Hardware Calibration
-    1.  test
-
-### Software Calibration
-
-Converting your model to gcode
------------------------
-TODO
-
-Converting your model to Peachy Printer format
------------------------
-TODO
-
-Printing you model
------------------------
-TODO
 
 
 Future Development Plans (New Code Base)
@@ -77,4 +50,4 @@ Version History
 ------------------
 
 2014-02-02 - Created this History
-2014-02-24 - 
+2014-03-27 - Depricated this code base
