@@ -36,7 +36,7 @@ class MockPyAudioStream(object):
 class DripDetectorTests(unittest.TestCase):
     test_file_path = os.path.join(os.path.dirname(__file__), '..', 'test_data')
     time_to_wait = 0.5
-    
+
     def setup(self):
         self.stream = None
 
@@ -125,20 +125,6 @@ class DripDetectorTests(unittest.TestCase):
         time.sleep(self.time_to_wait)
         drip_detector.stop()
         self.assertEqual(drip_detector.get_height_mm(), 22)
-
-    @patch('pyaudio.PyAudio')
-    def test_drip_detector_should_run_in_its_own_thread(self, mock_pyaudio):
-        drips_per = 1
-        wave_file = os.path.join(self.test_file_path, '22_drips_speeding_up.wav')
-        self.stream = MockPyAudioStream(wave_file)
-
-        my_mock_pyaudio = mock_pyaudio.return_value
-        my_mock_pyaudio.open.return_value = self.stream
-
-        drip_detector = DripDetector(drips_per)
-        drip_detector.start()
-        drip_detector.stop()
-        self.assertTrue(drip_detector.get_height_mm() < 22)
 
     @patch('pyaudio.PyAudio')
     def test_drip_detector_should_report_2_drips_if_started_half_way_though_drip(self, mock_pyaudio):
