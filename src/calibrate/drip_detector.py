@@ -33,9 +33,9 @@ class DripDetector(threading.Thread):
         return (self._num_drips * 1.0) / self._drips_per_mm
 
     def run(self):
-        self.pa = pyaudio.PyAudio()
-        self.instream = self.pa.open(
-                format=self.pa.get_format_from_width(2, unsigned=False),
+        pa = pyaudio.PyAudio()
+        self.instream = pa.open(
+                format=pa.get_format_from_width(2, unsigned=False),
                  channels=1,
                  rate=self._sampling_frequency,
                  input=True,
@@ -50,14 +50,20 @@ class DripDetector(threading.Thread):
                 self._add_frames(frames)
 
     def stop(self):
-        self._running = False
-        if self.instream:
-            self.instream.stop_stream()
-            time.sleep(0.1) # Waiting for current op to compelete
-            self.instream.close()
-        self.join(10.0)
-        if self.is_alive():
-            print('WARNING: DripDetector failed to stop')
+        while self.is_alive():
+            if self._running:
+                self._running = False
+            if self.instream:
+                try:
+                    self.instream.stop_stream()
+                except Exception as ex:
+                    print(ex)
+                time.sleep(0.1) # Waiting for current op to compelete
+                try:
+                    self.instream.close()
+                except Exception as ex:
+                    print(ex)
+            self.join(10.0)
 
     def _add_frames(self, frames):
         hold_samples_c = 250
