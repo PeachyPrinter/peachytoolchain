@@ -8,13 +8,6 @@ class DripDetector(threading.Thread):
     MONO_WAVE_STRUCT_FMT = "h"
     MONO_WAVE_STRUCT = struct.Struct(MONO_WAVE_STRUCT_FMT)
     MAX_S16 = math.pow(2, 15)-1
-
-    _running = False
-    _num_drips = 0
-    _drips_per_mm = 1.0
-    _hold_samples = 0
-    _indrip = False
-
     def __init__(self, drips_per_mm, initial_height = 0.0, sampling_frequency = 48000, threshold = 400, release_ms = 6, echo_drips = False):
         threading.Thread.__init__(self)
         self._drips_per_mm = drips_per_mm * 1.0
@@ -22,6 +15,12 @@ class DripDetector(threading.Thread):
         self._threshold = self.MAX_S16 - threshold
         self._release = self._sampling_frequency / 1000 * release_ms
         self._echo_drips = echo_drips
+        self._running = False
+        self._num_drips = 0
+        self._drips_per_mm = 1.0
+        self._hold_samples = 0
+        self._indrip = False
+        self.instream = None
 
         self.set_drips_per_mm(drips_per_mm)
 
