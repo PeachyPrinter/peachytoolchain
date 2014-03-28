@@ -33,9 +33,9 @@ class DripDetector(threading.Thread):
         return (self._num_drips * 1.0) / self._drips_per_mm
 
     def run(self):
-        pa = pyaudio.PyAudio()
-        self.instream = pa.open(
-                format=pa.get_format_from_width(2, unsigned=False),
+        self.pa = pyaudio.PyAudio()
+        self.instream = self.pa.open(
+                format=self.pa.get_format_from_width(2, unsigned=False),
                  channels=1,
                  rate=self._sampling_frequency,
                  input=True,

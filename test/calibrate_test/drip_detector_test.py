@@ -35,9 +35,10 @@ class MockPyAudioStream(object):
 
 class DripDetectorTests(unittest.TestCase):
     test_file_path = os.path.join(os.path.dirname(__file__), '..', 'test_data')
-    p = pyaudio.PyAudio()
     time_to_wait = 0.5
-    stream = None
+    
+    def setup(self):
+        self.stream = None
 
     def tearDown(self):
         try:
