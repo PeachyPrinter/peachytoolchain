@@ -348,10 +348,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, Logging):
             speed = float(self.speed_edit.text())
         except ValueError:
             # Invalid value entered -- reset
-            speed = self.generator.speed
+            if self.generator.speed:
+                speed = self.generator.speed
+            else:
+                speed = 100
             self.speed_edit.setValue(speed)
         if speed <= 0:
-            speed = self.generator.speed
+            if self.generator.speed:
+                speed = self.generator.speed
+            else:
+                speed = 100
 
         self.speed_edit.setValue(speed)
         return speed
